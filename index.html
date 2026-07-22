@@ -169,7 +169,7 @@
     #map-badge { position: absolute; top: 20px; right: 20px; z-index: 999; background: rgba(255,255,255,0.95); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; font-size: 12px; font-weight: 700; color: var(--text-dark); box-shadow: var(--shadow-card); transition: 0.3s;}
 
     .map-print-label { 
-      background: rgba(255, 255, 255, 0.20); 
+      background: rgba(255, 255, 255, 0.40); 
       backdrop-filter: blur(4px); 
       -webkit-backdrop-filter: blur(4px);
       border: 1px solid rgba(255, 255, 255, 0.6); 
@@ -284,7 +284,7 @@
       .qr-box { border: 1pt dashed #cbd5e1 !important; background: #fff !important; padding: 4pt !important; border-radius: 0 !important; display: flex !important; align-items: center !important; gap: 6pt !important;}
     }
     .map-print-label { 
-        background: rgba(255, 255, 255, 0.25) !important; 
+        background: rgba(255, 255, 255, 0.45) !important; 
         border: 1px solid #ccc !important;
         max-width: 240px !important;
         text-align: left !important;
@@ -340,17 +340,11 @@
 
           <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border);">
             <div class="bulk-toggle" onclick="document.getElementById('bulk-body').classList.toggle('open')">
-              <span>📋 Bulk Import</span> <span>▾</span>
+              <span>📋 Smart Bulk Import</span> <span>▾</span>
             </div>
             <div id="bulk-body">
               <textarea id="bulk-input" class="app-input" placeholder="Paste locations (one per line):&#10;14.6667° N, 121.0500° E&#10;SM Megamall"></textarea>
-              <div style="display: flex; gap: 8px;">
-                <button class="btn-import" style="flex: 2;" onclick="processBulkImport()">Import List</button>
-                <button class="btn-import" style="flex: 1; background: #475569;" onclick="saveRouteToFile()">💾 Save</button>
-                <label class="btn-import" style="flex: 1; background: #475569; text-align: center; cursor: pointer;">
-                  📂 Load <input type="file" style="display:none;" accept=".json" onchange="loadRouteFromFile(event)">
-                </label>
-              </div>
+              <button class="btn-import" onclick="processBulkImport()">Import List</button>
             </div>
           </div>
         </div>
@@ -365,6 +359,14 @@
             <span class="toggle-label">Auto-Optimize Route Order</span>
             <label class="toggle-switch"><input type="checkbox" id="optimize-toggle" checked /><span class="toggle-slider"></span></label>
           </div>
+        </div>
+
+        <!-- NEW: Save & Load Buttons placed clearly outside -->
+        <div id="storage-row" style="display: flex; gap: 10px; margin-bottom: 4px;">
+          <button class="btn btn-secondary" style="font-size: 12px; padding: 10px; color: #334155; border-color: #cbd5e1;" onclick="saveRouteToFile()">💾 Save Route</button>
+          <label class="btn btn-secondary" style="font-size: 12px; padding: 10px; margin: 0; color: #334155; border-color: #cbd5e1; cursor: pointer;">
+            📂 Load Route <input type="file" style="display:none;" accept=".json" onchange="loadRouteFromFile(event)">
+          </label>
         </div>
 
         <button class="btn btn-primary" id="generate-btn" onclick="generateRoute()">Generate Optimized Route</button>
@@ -730,7 +732,20 @@ async function generateRoute() {
   ordered.forEach((pt, i) => {
     const color = getMarkerColorHex(i, ordered.length);
     const mk = L.marker([pt.lat, pt.lon], { icon: customIcon(i+1, color) }).addTo(map);
-    mk.bindTooltip(`<b>${i+1}.</b> ${escapeHtml(pt.name)}`, { permanent: true, direction: 'top', className: 'map-print-label', offset: [0, -28] });
+    
+    // SMART TRUNCATOR: Only use the first part of the address for the map label
+    let shortName = pt.name;
+    const isCoordinate = /^[-+]?\d+(\.\d+)?\s*,\s*[-+]?\d+(\.\d+)?$/.test(shortName);
+    
+    // If it's a real name (not just coordinates), trim it down drastically
+    if (!isCoordinate) {
+      shortName = pt.name.split(',')[0].trim(); // Take everything before the first comma
+      if (shortName.length > 18) {
+        shortName = shortName.substring(0, 18) + '...'; // Hard cap at 18 characters
+      }
+    }
+
+    mk.bindTooltip(`<b>${i+1}.</b> ${escapeHtml(shortName)}`, { permanent: true, direction: 'top', className: 'map-print-label', offset: [0, -28] });
     markers.push(mk);
   });
   
