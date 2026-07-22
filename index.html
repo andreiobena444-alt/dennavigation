@@ -40,6 +40,8 @@
 
     #map-area { position: absolute; inset: 0; z-index: 1; background: #e5e3df; }
     #map { width: 100%; height: 100%; }
+    /* Crosshair cursor when picking location */
+    #map.picking-mode { cursor: crosshair !important; }
     
     #sidebar-wrapper {
       position: absolute; top: 20px; bottom: 20px; left: 20px; z-index: 10;
@@ -84,20 +86,30 @@
     .btn-import:hover { background: #2563eb; }
 
     #stops-container { display: flex; flex-direction: column; gap: 14px; position: relative; }
-    .stop-row { display: flex; align-items: center; gap: 12px; position: relative; z-index: 1; }
+    .stop-row { display: flex; align-items: center; gap: 8px; position: relative; z-index: 1; background: var(--bg-color); padding: 4px; border-radius: 8px; transition: 0.2s;}
+    .stop-row.dragging { opacity: 0.4; box-shadow: var(--shadow-lg); z-index: 100;}
+    .drag-handle { cursor: grab; font-size: 16px; color: #94a3b8; user-select: none; padding: 0 4px; }
+    .drag-handle:active { cursor: grabbing; }
     .stop-badge { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; color: #fff; flex-shrink: 0; box-shadow: 0 2px 5px rgba(0,0,0,0.15);}
     
-    .stop-input-wrap { position: relative; flex: 1; }
-    .location-input { width: 100%; background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 12px 34px 12px 14px; font-size: 13px; font-family: var(--font-main); font-weight: 600; outline: none; transition: 0.2s; box-shadow: var(--shadow-card);}
+    .stop-input-wrap { position: relative; flex: 1; display: flex; align-items: center;}
+    
+    .location-input { width: 100%; background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 12px 70px 12px 14px; font-size: 13px; font-family: var(--font-main); font-weight: 600; outline: none; transition: 0.2s; box-shadow: var(--shadow-card);}
     .location-input:focus { border-color: var(--forest-main); }
     .location-input.geocoded { border-color: var(--color-start); background: #f0fdf4; border-width: 2px;}
-    .geocode-indicator { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); opacity: 0; color: var(--color-start); font-weight: 800; }
+    
+    .geocode-indicator { position: absolute; right: 44px; font-size: 13px; opacity: 0; color: var(--color-start); font-weight: 800; pointer-events: none;}
     .geocode-indicator.visible { opacity: 1; }
     
-    .remove-btn { width: 30px; height: 30px; border-radius: 8px; background: #fff; border: 1px solid var(--border); color: var(--text-muted); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.15s; font-weight: bold;}
+    .pick-btn { position: absolute; right: 8px; background: #f8fafc; border: 1px solid var(--border); border-radius: 6px; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-muted); transition: 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.05);}
+    .pick-btn:hover { border-color: var(--forest-main); color: var(--forest-main); }
+    .pick-btn.active { background: var(--forest-main); color: #fff; border-color: var(--forest-main); animation: pulsePick 1.5s infinite; }
+    @keyframes pulsePick { 0% { box-shadow: 0 0 0 0 rgba(22,101,52,0.4); } 70% { box-shadow: 0 0 0 6px rgba(22,101,52,0); } 100% { box-shadow: 0 0 0 0 rgba(22,101,52,0); } }
+
+    .remove-btn { width: 30px; height: 30px; border-radius: 8px; background: #fff; border: 1px solid var(--border); color: var(--text-muted); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.15s; font-weight: bold; flex-shrink: 0;}
     .remove-btn:hover { background: #fef2f2; border-color: var(--color-end); color: var(--color-end); }
     
-    .add-stop-btn { margin-left: 44px; display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; background: #fff; border: 2px dashed #cbd5e1; border-radius: 8px; font-size: 13px; font-weight: 700; color: var(--text-muted); cursor: pointer; transition: 0.2s; width: max-content;}
+    .add-stop-btn { margin-left: 42px; display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; background: #fff; border: 2px dashed #cbd5e1; border-radius: 8px; font-size: 13px; font-weight: 700; color: var(--text-muted); cursor: pointer; transition: 0.2s; width: max-content;}
     .add-stop-btn:hover { border-color: var(--forest-main); color: var(--forest-main); background: var(--forest-light); }
 
     .toggle-row { display: flex; align-items: center; justify-content: space-between; }
@@ -147,34 +159,31 @@
     .stop-meta { font-size: 12px; color: var(--text-muted); font-family: monospace; font-weight: 600;}
     .stop-leg { font-size: 13px; color: var(--color-mid); text-align: right; font-weight: 800; white-space: nowrap; padding-left: 10px;}
     
-    .qr-wrapper { background: #f8fafc; padding: 6px; border-radius: 8px; display: flex; align-items: center; gap: 12px; border: 1px dashed #cbd5e1; margin-top: 12px; width: max-content;}
-    .qr-wrapper span { font-size: 10px; color: var(--text-dark); font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;}
+    .qr-wrapper { display: flex; gap: 10px; margin-top: 12px; width: max-content; }
+    .qr-box { background: #f8fafc; padding: 6px; border-radius: 8px; display: flex; align-items: center; gap: 10px; border: 1px dashed #cbd5e1; }
+    .qr-box span { font-size: 9px; color: var(--text-dark); font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; display: block; line-height: 1.2;}
 
     #error-box { display: none; background: #fef2f2; border: 1px solid var(--color-end); border-radius: 8px; padding: 14px; font-size: 13px; color: var(--color-end); font-weight: 600; }
     #error-box.visible { display: block; }
 
-    /* Upgraded Label CSS - Semi-transparent so lines show through! */
-    .leaflet-tooltip.map-print-label { 
-      display: block !important; 
-      opacity: 1 !important; 
-      background: rgba(255,255,255,0.70) !important; /* Slightly transparent */
-      border: 2px solid #fff !important; 
-      border-radius: 6px !important; 
-      color: var(--text-dark) !important; 
-      font-family: var(--font-main) !important; 
-      font-size: 11px !important; 
-      font-weight: 800 !important; 
-      padding: 4px 8px !important; 
-      box-shadow: 0 4px 10px rgba(0,0,0,0.2) !important; 
-      
-      /* Halo effect keeps text readable over lines */
-      text-shadow: 0px 0px 4px #ffffff, 0px 0px 6px #ffffff !important; 
-      
-      white-space: normal !important; 
-      max-width: 130px !important; 
-      text-align: center !important;
-      line-height: 1.2 !important;
-      z-index: 1000 !important;
+    #map-badge { position: absolute; top: 20px; right: 20px; z-index: 999; background: rgba(255,255,255,0.95); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; font-size: 12px; font-weight: 700; color: var(--text-dark); box-shadow: var(--shadow-card); transition: 0.3s;}
+
+    .map-print-label { 
+      background: rgba(255, 255, 255, 0.20); 
+      backdrop-filter: blur(4px); 
+      -webkit-backdrop-filter: blur(4px);
+      border: 1px solid rgba(255, 255, 255, 0.6); 
+      border-radius: 8px; 
+      color: #0f172a; 
+      font-family: var(--font-main); 
+      font-size: 11px; 
+      font-weight: 700; 
+      padding: 6px 10px; 
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); 
+      white-space: normal; 
+      max-width: 240px; /* Forces text to flow wide instead of tall */
+      text-align: left; 
+      line-height: 1.3;
     }
     
     .ac-dropdown { position: fixed; z-index: 99999; background: #fff; border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); display: none; min-width: 250px; max-height: 250px; overflow-y: auto; }
@@ -183,99 +192,141 @@
     .ac-item:last-child { border-bottom: none; }
     .ac-item:hover { background: var(--forest-light); color: var(--forest-main); }
 
+    /* ── Mobile Responsiveness ── */
+    @media (max-width: 768px) {
+      #app { flex-direction: column; }
+      #map-area { position: relative; height: 40vh; inset: auto; flex-shrink: 0; z-index: 1;}
+      #sidebar-wrapper { position: relative; top: 0; left: 0; bottom: 0; width: 100%; padding: 12px; flex: 1; height: 60vh; }
+      #sidebar { border-radius: 12px; border: 1px solid var(--border); box-shadow: var(--shadow-card); }
+      #sidebar-header { padding: 16px; }
+      .action-grid { grid-template-columns: 1fr; }
+    }
+
     /* ══════════════════════════════════════════════
        THE BULLETPROOF EXACT-COLOR PRINT FIX
     ══════════════════════════════════════════════ */
-    body.is-printing { background: #fff !important; color: #000 !important; overflow: visible !important; }
-    body.is-printing #app { display: block !important; height: auto !important; width: 100% !important; overflow: visible !important; }
+    /* ── The Interactive Print Preview Mode ── */
+    #print-preview-bar {
+      display: none; position: fixed; top: 0; left: 0; right: 0; 
+      background: var(--forest-dark); color: white; padding: 16px 24px; 
+      z-index: 999999; justify-content: space-between; align-items: center; 
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
     
-    body.is-printing #sidebar-wrapper, body.is-printing #sidebar, body.is-printing #sidebar-body { 
+    body.is-previewing { background: #94a3b8 !important; overflow-y: auto !important; }
+    body.is-previewing #print-preview-bar { display: flex; }
+    
+    body.is-previewing #app { 
+      display: block !important; width: 800px !important; margin: 80px auto 40px auto !important; 
+      padding: 20px !important; background: #fff !important; 
+      box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2) !important; height: auto !important; 
+    }
+    
+    body.is-previewing #sidebar-wrapper, body.is-previewing #sidebar, body.is-previewing #sidebar-body { 
       position: relative !important; width: 100% !important; height: auto !important; 
       display: block !important; overflow: visible !important; border: none !important; box-shadow: none !important; background: #fff !important; top: 0 !important; left: 0 !important; padding: 0 !important; margin: 0 !important;
     }
     
-    body.is-printing #map-area { 
+    body.is-previewing #map-area { 
       position: relative !important; display: block !important; 
       width: 760px !important; max-width: 760px !important; height: 420px !important; 
-      border: 2px solid #000 !important; margin: 0 auto 20px auto !important; border-radius: 0 !important;
+      border: 2px solid #000 !important; margin: 0 auto 20px auto !important; border-radius: 0 !important; z-index: 10;
     }
     
-    body.is-printing .input-wrapper, body.is-printing #stops-section, body.is-printing #options-section, body.is-printing #generate-btn, body.is-printing .action-grid, body.is-printing .leaflet-control-zoom, body.is-printing .bulk-toggle, body.is-printing #bulk-body { display: none !important; }
+    body.is-previewing .input-wrapper, body.is-previewing #stops-section, body.is-previewing #options-section, body.is-previewing #generate-btn, body.is-previewing .action-grid, body.is-previewing .leaflet-control-zoom, body.is-previewing .bulk-toggle, body.is-previewing #bulk-body, body.is-previewing #map-badge, body.is-previewing .leaflet-control-layers { display: none !important; }
     
-    /* Make the printed version look exactly like the web app header */
-    body.is-printing #sidebar-header {
-       border-radius: 0 !important; margin-bottom: 20px !important;
-    }
+    body.is-previewing #sidebar-header { display: none !important; }
+    body.is-previewing #print-header { display: block !important; margin-bottom: 20px; border-bottom: 3px solid #111; padding-bottom: 10px; }
+    
+    /* Make the Preview screen mimic the exact paper styling */
+    body.is-previewing #stats-bar { border: 2pt solid #000 !important; margin-bottom: 25pt !important; box-shadow: none !important; border-radius: 0 !important;}
+    body.is-previewing .stat-val { color: #000 !important; font-size: 16pt !important; }
+    body.is-previewing .itin-stop { padding: 10pt 0 !important; gap: 12pt !important;}
+    body.is-previewing .itin-badge { border: 2pt solid #000 !important; color: #000 !important; background: #fff !important; width: 28pt !important; height: 28pt !important; font-size: 14pt !important; box-shadow: none !important;}
+    body.is-previewing .itin-info { border: 1pt solid #000 !important; background: #fff !important; padding: 12pt !important; border-radius: 0 !important; box-shadow: none !important;}
+    body.is-previewing .stop-name { font-size: 14pt !important; color: #000 !important; white-space: normal; }
+    body.is-previewing .stop-meta { font-size: 10pt !important; color: #555 !important; }
+    body.is-previewing .stop-leg { font-size: 12pt !important; color: #000 !important; }
+    body.is-previewing .qr-wrapper { display: flex !important; gap: 10pt !important; margin-top: 10pt !important; width: 100%; background: #fff; border: none; padding: 0;}
+    body.is-previewing .qr-box { border: 1pt dashed #cbd5e1 !important; background: #fff !important; padding: 4pt !important; border-radius: 0 !important; display: flex !important; align-items: center !important; gap: 6pt !important;}
 
+    /* ── Native Print Rules ── */
     @media print {
-      /* THIS FORCES ALL BACKGROUND COLORS TO PRINT EXACTLY AS THEY APPEAR */
-      * {
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-      }
-      
+      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;}
       @page { margin: 10mm; }
       html, body { overflow: visible !important; background: #fff !important; color: #000 !important; font-size: 11pt !important; width: 100% !important; display: block !important;}
       
-      #app, #sidebar-wrapper, #sidebar, #sidebar-body, #itinerary, #stops-container { 
-        display: block !important; height: auto !important; overflow: visible !important; position: static !important; 
-        padding: 0 !important; margin: 0 !important;
+      #print-preview-bar { display: none !important; }
+      
+      #app, #sidebar-wrapper, #sidebar, #sidebar-body, #stops-container { 
+        display: block !important; height: auto !important; overflow: visible !important; position: static !important; padding: 0 !important; margin: 0 !important; box-shadow: none !important;
       }
       
-      .input-wrapper, #stops-section, #options-section, #generate-btn, .action-grid, .leaflet-control-zoom, .bulk-toggle { display: none !important; }
+      #itinerary { display: block !important; height: auto !important; overflow: visible !important; position: relative !important; padding: 0 !important; margin: 0 !important; }
+      #itinerary::before { left: 16pt !important; top: 26pt !important; bottom: 26pt !important; background: linear-gradient(to bottom, var(--color-start), var(--color-mid), var(--color-end)) !important; }
       
-      #sidebar-header { margin-bottom: 15pt !important; border-radius: 0 !important; padding: 15pt !important;}
+      .input-wrapper, #stops-section, #options-section, #generate-btn, .action-grid, .leaflet-control-zoom, .bulk-toggle, #map-badge, .leaflet-control-layers { display: none !important; }
       
+      #sidebar-header { display: none !important;}
       #map-area { display: block !important; width: 100% !important; height: 450px !important; border: 2pt solid #000 !important; margin-bottom: 20pt !important; page-break-inside: avoid; border-radius: 0 !important;}
-      
-      #stats-bar { margin-bottom: 25pt !important; box-shadow: none !important; }
+      #print-header { display: block !important; margin-bottom: 20pt !important; border-bottom: 3pt solid #000; padding-bottom: 10pt; }
+      #stats-bar { margin-bottom: 25pt !important; box-shadow: none !important; border: 2pt solid #000 !important; border-radius: 0 !important;}
+      .stat-val { color: #000 !important; font-size: 16pt !important; }
       
       .itin-stop { padding: 10pt 0 !important; page-break-inside: avoid; gap: 12pt !important;}
-      .itin-info { border: 1pt solid #cbd5e1 !important; box-shadow: none !important;}
-      .qr-wrapper { border: 1pt dashed #cbd5e1 !important; }
+      .itin-badge { border: 2pt solid #000 !important; color: #000 !important; background: #fff !important; width: 28pt !important; height: 28pt !important; font-size: 14pt !important; box-shadow: none !important;}
+      .itin-info { border: 1pt solid #000 !important; background: #fff !important; padding: 12pt !important; border-radius: 0 !important; box-shadow: none !important;}
+      .stop-name { font-size: 14pt !important; color: #000 !important; white-space: normal; }
+      .stop-meta { font-size: 10pt !important; color: #555 !important; }
+      .stop-leg { font-size: 12pt !important; color: #000 !important; }
+      
+      .qr-wrapper { display: flex !important; gap: 10pt !important; margin-top: 10pt !important;}
+      .qr-box { border: 1pt dashed #cbd5e1 !important; background: #fff !important; padding: 4pt !important; border-radius: 0 !important; display: flex !important; align-items: center !important; gap: 6pt !important;}
     }
-#itinerary::before { 
-  display: none !important; /* Hides the unbroken line */
-}
-.itin-stop { 
-  border-left: 3pt solid var(--forest-main) !important; /* Adds page-break-friendly borders */
-  margin-left: 15pt !important; 
-  padding-left: 15pt !important;
-}
-.itin-badge {
-  margin-left: -32pt !important; /* Pulls the badge over the border */
-}
-#print-header { 
-  display: block !important; 
-  margin-bottom: 15pt; 
-  padding-bottom: 10pt;
-  border-bottom: 2pt solid #000;
-}
-#print-title { font-size: 18pt; font-weight: 800; color: #000; }
+    .map-print-label { 
+        background: rgba(255, 255, 255, 0.25) !important; 
+        border: 1px solid #ccc !important;
+        max-width: 240px !important;
+        text-align: left !important;
+        padding: 6px 10px !important;
+      }
   </style>
 </head>
 <body>
 
+<!-- Interactive Print Preview Bar -->
+<div id="print-preview-bar">
+  <div>
+    <span style="font-weight: 800; font-size: 16px;">🖨️ Interactive Print Preview</span>
+    <span style="margin-left: 12px; font-size: 13px; color: #a7f3d0;">Pan and zoom the map below to frame your labels perfectly, then click Confirm.</span>
+  </div>
+  <div style="display:flex; gap:10px;">
+    <button class="btn" style="background: #334155; color: #fff; padding: 8px 16px; box-shadow: none;" onclick="cancelPrint()">Cancel</button>
+    <button class="btn" style="background: #10b981; color: #fff; padding: 8px 16px; box-shadow: none;" onclick="confirmPrint()">Confirm & Print</button>
+  </div>
+</div>
+
 <div id="app">
-  <div id="map-area"><div id="map"></div></div>
+  <div id="map-area">
+    <div id="map-badge">Map View</div>
+    <div id="map"></div>
+  </div>
 
   <div id="sidebar-wrapper">
     <div id="sidebar">
       
       <div id="sidebar-header">
-        <div class="logo-icon">📍</div>
+        <div class="logo-icon">🧭</div>
         <div>
           <div class="logo-text">Dennavigation</div>
-          <div class="logo-sub">Itinerary & Travel Plan Tool</div>
+          <div class="logo-sub">Itinerary Tool</div>
         </div>
       </div>
-<div id="print-header" style="display: none;">
-  <h1 id="print-title"></h1>
-</div>
+
       <div id="sidebar-body">
         
         <div class="card">
-          <div class="card-title">🚀 Mission Profile</div>
+          <div class="card-title">🛄 Bon Voyage!</div>
           <div class="input-group">
             <div class="input-wrapper" style="flex: 2;">
               <label class="input-label">Trip Name</label>
@@ -289,11 +340,17 @@
 
           <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border);">
             <div class="bulk-toggle" onclick="document.getElementById('bulk-body').classList.toggle('open')">
-              <span>📋 Smart Bulk Import</span> <span>▾</span>
+              <span>📋 Bulk Import</span> <span>▾</span>
             </div>
             <div id="bulk-body">
               <textarea id="bulk-input" class="app-input" placeholder="Paste locations (one per line):&#10;14.6667° N, 121.0500° E&#10;SM Megamall"></textarea>
-              <button class="btn-import" onclick="processBulkImport()">Import to Route</button>
+              <div style="display: flex; gap: 8px;">
+                <button class="btn-import" style="flex: 2;" onclick="processBulkImport()">Import List</button>
+                <button class="btn-import" style="flex: 1; background: #475569;" onclick="saveRouteToFile()">💾 Save</button>
+                <label class="btn-import" style="flex: 1; background: #475569; text-align: center; cursor: pointer;">
+                  📂 Load <input type="file" style="display:none;" accept=".json" onchange="loadRouteFromFile(event)">
+                </label>
+              </div>
             </div>
           </div>
         </div>
@@ -349,6 +406,9 @@
 let map = null, markers = [], routeLayer = null, currentRoute = null;
 let stopIdCounter = 0, activeInput = null, acDebounceTimer = null, geoCache = {};
 
+let isPicking = false;
+let pickingInput = null;
+
 function escapeHtml(str) { return String(str).replace(/[&<>"']/g, function(m) { return {'&': '&amp;','<': '&lt;','>': '&gt;','"': '&quot;',"'": '&#39;'}[m]; }); }
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
@@ -359,43 +419,16 @@ function formatDayInput(input) {
 
 function checkCoordinateBypass(input, rawValue) {
   const val = rawValue || (input ? input.value.trim() : '');
-  
-  // ALLOW tabs and spaces as separators ([,;\t ]+)
-  const regex = /([-+]?\d{1,3}(?:\.\d+)?)\s*[°]?\s*([NSnsEWew])?\s*[,;\t ]+\s*([-+]?\d{1,3}(?:\.\d+)?)\s*[°]?\s*([NSnsEWew])?/;
+  const regex = /^\s*([-+]?\d{1,3}(?:\.\d+)?)\s*[°]?\s*([NSns])?\s*[,;]?\s*([-+]?\d{1,3}(?:\.\d+)?)\s*[°]?\s*([EWew])?\s*$/;
   const match = val.match(regex);
-  
   if (match) {
-    let num1 = parseFloat(match[1]);
-    let dir1 = match[2] ? match[2].toUpperCase() : null;
-    let num2 = parseFloat(match[3]);
-    let dir2 = match[4] ? match[4].toUpperCase() : null;
+    let lat = parseFloat(match[1]);
+    if (match[2] && match[2].toUpperCase() === 'S') lat = -Math.abs(lat);
+    if (match[2] && match[2].toUpperCase() === 'N') lat = Math.abs(lat);
     
-    let lat = null, lon = null;
-
-    // Safety: Prevent false positives for normal addresses (like "15th Ave, 3rd St")
-    if (!dir1 && !dir2 && !match[1].includes('.') && !match[3].includes('.')) return null;
-
-    // Auto-detect Lat vs Lon if no letters are provided
-    if (dir1 === 'N' || dir1 === 'S' || dir2 === 'E' || dir2 === 'W') {
-      lat = (dir1 === 'S') ? -Math.abs(num1) : num1;
-      lon = (dir2 === 'W') ? -Math.abs(num2) : num2;
-    } else if (dir1 === 'E' || dir1 === 'W' || dir2 === 'N' || dir2 === 'S') {
-      lon = (dir1 === 'W') ? -Math.abs(num1) : num1;
-      lat = (dir2 === 'S') ? -Math.abs(num2) : num2;
-    } else {
-      // No letters! We must infer based on physical boundaries.
-      // Lat is between -90 and 90. Lon is between -180 and 180.
-      if (Math.abs(num1) > 90 && Math.abs(num2) <= 90) {
-        lon = num1; lat = num2; // num1 is too big for Lat, must be Lon
-      } else if (Math.abs(num2) > 90 && Math.abs(num1) <= 90) {
-        lat = num1; lon = num2; // num2 is too big for Lat, must be Lon
-      } else {
-        lat = num1; lon = num2; // Default assume Lat, Lon
-      }
-    }
-
-    // Final boundary check
-    if (lat === null || lon === null || Math.abs(lat) > 90 || Math.abs(lon) > 180) return null;
+    let lon = parseFloat(match[3]);
+    if (match[4] && match[4].toUpperCase() === 'W') lon = -Math.abs(lon);
+    if (match[4] && match[4].toUpperCase() === 'E') lon = Math.abs(lon);
 
     if (input) {
       input.dataset.lat = lat; input.dataset.lon = lon;
@@ -417,6 +450,43 @@ async function reverseGeocode(lat, lon) {
   return null;
 }
 
+function toggleMapPick(btn) {
+  const row = btn.closest('.stop-row');
+  const input = row.querySelector('.location-input');
+  
+  if (pickingInput === input) {
+    cancelMapPick();
+    return;
+  }
+  
+  cancelMapPick();
+  isPicking = true;
+  pickingInput = input;
+  
+  btn.classList.add('active');
+  document.getElementById('map').classList.add('picking-mode');
+  
+  const badge = document.getElementById('map-badge');
+  badge.innerHTML = '🎯 <b>Click anywhere</b> on the map to set location';
+  badge.style.background = 'var(--forest-main)';
+  badge.style.color = '#fff';
+}
+
+function cancelMapPick() {
+  if (!pickingInput) return;
+  const btn = pickingInput.closest('.stop-input-wrap').querySelector('.pick-btn');
+  if (btn) btn.classList.remove('active');
+  
+  isPicking = false;
+  pickingInput = null;
+  document.getElementById('map').classList.remove('picking-mode');
+  
+  const badge = document.getElementById('map-badge');
+  badge.innerHTML = 'Map View';
+  badge.style.background = 'rgba(255,255,255,0.95)';
+  badge.style.color = 'var(--text-dark)';
+}
+
 function processBulkImport() {
   const text = document.getElementById('bulk-input').value.trim();
   if (!text) return;
@@ -429,12 +499,43 @@ function processBulkImport() {
   updateRowBadges();
 }
 
-// ── Lightweight, Ultra-Fast Map Layer (CartoDB Light) ──
 function initMap() {
   if (map) return;
   map = L.map('map', { center: [14.5995, 120.9842], zoom: 12, zoomControl: false });
-  L.control.zoom({ position: 'topright' }).addTo(map);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(map);
+  L.control.zoom({ position: 'bottomright' }).addTo(map);
+  
+  // 1. Define the Default Fast Map (CartoDB Light)
+  const defaultMap = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 });
+  
+  // 2. Define the Realistic Satellite Map (Esri World Imagery)
+  const satelliteMap = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19 });
+
+  // 3. Set Default Map on load
+  defaultMap.addTo(map);
+
+  // 4. Add the Layer Toggle UI to bottom right (above zoom controls)
+  const baseMaps = {
+    "Default Map": defaultMap,
+    "Satellite View": satelliteMap
+  };
+  L.control.layers(baseMaps, null, { position: 'bottomright' }).addTo(map);
+  
+  // Intercept map click for the Picker
+  map.on('click', async function(e) {
+    if (!isPicking || !pickingInput) return;
+    const lat = e.latlng.lat; const lon = e.latlng.lng;
+    const currentInput = pickingInput; 
+    
+    currentInput.value = "Capturing location...";
+    cancelMapPick(); 
+    
+    const rgName = await reverseGeocode(lat, lon);
+    currentInput.value = rgName ? rgName : `${lat.toFixed(5)}, ${lon.toFixed(5)}`;
+    
+    currentInput.dataset.lat = lat; currentInput.dataset.lon = lon;
+    currentInput.classList.add('geocoded');
+    currentInput.closest('.stop-input-wrap').querySelector('.geocode-indicator').classList.add('visible');
+  });
 }
 
 function getBadgeColor(index, total) {
@@ -456,12 +557,18 @@ function updateRowBadges() {
 
 function addStopRow(prefillValue = '') {
   const container = document.getElementById('stops-container');
-  const row = document.createElement('div'); row.className = 'stop-row';
+  const row = document.createElement('div'); 
+  row.className = 'stop-row'; 
+  row.draggable = true; /* Enables Drag & Drop */
   row.innerHTML = `
+    <div class="drag-handle" title="Drag to reorder">⠿</div>
     <div class="stop-badge"></div>
     <div class="stop-input-wrap">
-      <input type="text" class="location-input" placeholder="Search or paste Lat,Lon" value="${escapeHtml(prefillValue)}" />
+      <input type="text" class="location-input" placeholder="Search, paste Lat,Lon, or Pick" value="${escapeHtml(prefillValue)}" />
       <span class="geocode-indicator">✓</span>
+      <button class="pick-btn" onclick="toggleMapPick(this)" title="Pick location from map">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="22" y1="12" x2="18" y2="12"></line><line x1="6" y1="12" x2="2" y2="12"></line><line x1="12" y1="6" x2="12" y2="2"></line><line x1="12" y1="22" x2="12" y2="18"></line></svg>
+      </button>
     </div>
     <button class="remove-btn" onclick="removeStopRow(this)">✕</button>
   `;
@@ -470,6 +577,7 @@ function addStopRow(prefillValue = '') {
   
   const input = row.querySelector('.location-input');
   attachInputHandlers(input);
+  attachDragHandlers(row);
   if (prefillValue) checkCoordinateBypass(input, prefillValue);
 }
 
@@ -567,24 +675,18 @@ async function generateRoute() {
   for (let i = 0; i < inputs.length; i++) {
     let inp = inputs[i]; let nameVal = inp.value;
     if (inp.dataset.lat && inp.dataset.lon) {
-      document.getElementById('loading-text').textContent = `Identifying place ${i+1}...`;
-      await sleep(600);
-      const rgName = await reverseGeocode(inp.dataset.lat, inp.dataset.lon);
-      if (rgName) nameVal = rgName; 
+      if (/^\s*[-+]?\d{1,3}(?:\.\d+)?\s*[°]?\s*[NSns]?\s*[,;]?\s*[-+]?\d{1,3}(?:\.\d+)?\s*[°]?\s*[EWew]?\s*$/.test(nameVal)) {
+         document.getElementById('loading-text').textContent = `Identifying place ${i+1}...`;
+         await sleep(600);
+         const rgName = await reverseGeocode(inp.dataset.lat, inp.dataset.lon);
+         if (rgName) nameVal = rgName; 
+      }
       points.push({ name: nameVal, lat: parseFloat(inp.dataset.lat), lon: parseFloat(inp.dataset.lon) });
     } else {
       document.getElementById('loading-text').textContent = `Resolving ${nameVal}...`;
       const geo = await fallbackGeocode(nameVal);
       if (geo) points.push({ name: nameVal, lat: geo.lat, lon: geo.lon });
     }
-  }
-
-  if (points.length < 2) {
-    document.getElementById('loading-bar').classList.remove('active');
-    const errorBox = document.getElementById('error-box');
-    errorBox.textContent = `Error: Could not resolve valid coordinates for enough locations. (Successfully found ${points.length} out of ${inputs.length})`;
-    errorBox.classList.add('visible');
-    return;
   }
 
   let ordered = [...points];
@@ -606,23 +708,11 @@ async function generateRoute() {
   let totalDist = 0, totalTime = 0;
   const legs = [], geos = [];
   
-  document.getElementById('loading-text').textContent = `Calculating all driving routes...`;
-  
-  // Create an array of promises to fetch all legs at the exact same time
-  const legPromises = [];
   for (let i = 0; i < ordered.length - 1; i++) {
-    legPromises.push(getRouteLeg(ordered[i].lat, ordered[i].lon, ordered[i+1].lat, ordered[i+1].lon));
+    document.getElementById('loading-text').textContent = `Routing leg ${i+1}...`;
+    const leg = await getRouteLeg(ordered[i].lat, ordered[i].lon, ordered[i+1].lat, ordered[i+1].lon);
+    legs.push(leg); totalDist += leg.distanceM; totalTime += leg.durationS; geos.push(leg.geometry);
   }
-  
-  // Wait for all of them to finish at once (Massive speed boost)
-  const resolvedLegs = await Promise.all(legPromises);
-  
-  resolvedLegs.forEach(leg => {
-    legs.push(leg);
-    totalDist += leg.distanceM;
-    totalTime += leg.durationS;
-    geos.push(leg.geometry);
-  });
   legs.push(null);
   currentRoute = { stops: ordered, legs, totalDist, totalTime };
 
@@ -640,29 +730,15 @@ async function generateRoute() {
   ordered.forEach((pt, i) => {
     const color = getMarkerColorHex(i, ordered.length);
     const mk = L.marker([pt.lat, pt.lon], { icon: customIcon(i+1, color) }).addTo(map);
-    
-    // --- STAGGER LOGIC ---
-    const directions = ['top', 'right', 'bottom', 'left'];
-    const offsets = { 'top': [0, -35], 'right': [35, 0], 'bottom': [0, 35], 'left': [-35, 0] };
-    const dir = directions[i % 4];
-    const off = offsets[dir];
-    
-    // Show only Stop Number + First part of the address
-    const shortName = pt.name.split(',')[0] || "Unknown Location"; 
-    
-    mk.bindTooltip(`<b>${i+1}.</b> ${escapeHtml(shortName)}`, { 
-      permanent: true, 
-      direction: dir, 
-      className: 'map-print-label', 
-      offset: off 
-    });
+    mk.bindTooltip(`<b>${i+1}.</b> ${escapeHtml(pt.name)}`, { permanent: true, direction: 'top', className: 'map-print-label', offset: [0, -28] });
     markers.push(mk);
   });
   
   const allCoords = [];
   geos.forEach(geo => geo.coordinates.forEach(c => allCoords.push([c[1], c[0]])));
   
-  routeLayer = L.polyline(allCoords, { color: '#0f172a', weight: 6, opacity: 1.0, dashArray: '8, 8' }).addTo(map);
+  // Bright Cyan line, highly visible on both Light maps and Dark Satellite maps
+  routeLayer = L.polyline(allCoords, { color: '#06b6d4', weight: 5, opacity: 1, dashArray: '8, 8' }).addTo(map);
   map.fitBounds(routeLayer.getBounds(), { paddingBottomRight: [30, 30], paddingTopLeft: [450, 30] });
 
   const fmtDist = (m) => m < 1000 ? `${Math.round(m)} m` : `${(m/1000).toFixed(1)} km`;
@@ -675,61 +751,43 @@ async function generateRoute() {
 
   const itin = document.getElementById('itinerary'); itin.innerHTML = '';
   ordered.forEach((stop, i) => {
-    // Generate both URLs
     const gmapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${stop.lat},${stop.lon}`;
     const wazeUrl = `https://waze.com/ul?ll=${stop.lat},${stop.lon}&navigate=yes`;
-    
     const badgeColor = getBadgeColor(i, ordered.length);
     const div = document.createElement('div'); div.className = 'itin-stop';
-    
-    // THE FIX: Shift the logic to show the "Incoming" travel time instead of "Outgoing"
-    let routeStats = '';
-    if (i === 0) {
-      routeStats = 'Start of Route';
-    } else {
-      // Look at the previous leg that brought us TO this stop
-      routeStats = `${fmtDist(legs[i-1].distanceM)}<br>${fmtTime(legs[i-1].durationS)}`;
-    }
     
     div.innerHTML = `
       <div class="itin-badge" style="background: ${badgeColor}; border-color: ${badgeColor};">${i+1}</div>
       <div class="itin-info">
         <div class="itin-header">
            <div class="stop-name">${escapeHtml(stop.name)}</div>
-           <!-- Now this will show how long it took to arrive here -->
-           <div class="stop-leg">${routeStats}</div>
+           <div class="stop-leg">${legs[i] ? `${fmtDist(legs[i].distanceM)}<br>${fmtTime(legs[i].durationS)}` : 'End of Travel'}</div>
         </div>
         <div class="stop-meta">${stop.lat.toFixed(5)}, ${stop.lon.toFixed(5)}</div>
-        
-        <!-- TWO QR CODES SIDE BY SIDE WITH BRAND INDICATORS -->
-        <div style="display: flex; gap: 14px; margin-top: 14px; flex-wrap: wrap;">
-          <!-- Google Maps QR -->
-          <div class="qr-wrapper" id="qr-gmap-${i}">
-             <div style="display: flex; flex-direction: column; justify-content: center; min-width: 90px;">
-               <span style="font-size: 13px; font-weight: 800; color: #ea4335; display: flex; align-items: center; gap: 4px;">
-                 📍 Google Maps
-               </span>
-               <span style="font-size: 9px; color: var(--text-muted); margin-top: 3px; letter-spacing: 0.5px;">SCAN TO NAVIGATE</span>
+        <div class="qr-wrapper">
+           <div class="qr-box">
+             <div style="display:flex; flex-direction:column; align-items:center; text-align:center;">
+               <svg style="margin-bottom:3px;" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4285F4" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+               <span style="color:#4285F4;">Google</span>
+               <span>Maps</span>
              </div>
-          </div>
-
-          <!-- Waze QR -->
-          <div class="qr-wrapper" id="qr-waze-${i}">
-             <div style="display: flex; flex-direction: column; justify-content: center; min-width: 90px;">
-               <span style="font-size: 13px; font-weight: 800; color: #0099ff; display: flex; align-items: center; gap: 4px;">
-                 🚙 Waze App
-               </span>
-               <span style="font-size: 9px; color: var(--text-muted); margin-top: 3px; letter-spacing: 0.5px;">SCAN TO NAVIGATE</span>
+             <div id="qr-gmap-${i}"></div>
+           </div>
+           <div class="qr-box">
+             <div style="display:flex; flex-direction:column; align-items:center; text-align:center;">
+               <svg style="margin-bottom:3px;" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"></polygon></svg>
+               <span style="color:#0ea5e9;">Waze</span>
+               <span>Nav</span>
              </div>
-          </div>
+             <div id="qr-waze-${i}"></div>
+           </div>
         </div>
       </div>
     `;
     itin.appendChild(div);
-    
-    // Render both QR codes
-    new QRCode(div.querySelector(`#qr-gmap-${i}`), { text: gmapsUrl, width: 64, height: 64, correctLevel: QRCode.CorrectLevel.L });
-    new QRCode(div.querySelector(`#qr-waze-${i}`), { text: wazeUrl, width: 64, height: 64, correctLevel: QRCode.CorrectLevel.L });
+    // Generate both QRs side-by-side, slightly smaller to fit nicely
+    new QRCode(div.querySelector(`#qr-gmap-${i}`), { text: gmapsUrl, width: 56, height: 56, correctLevel: QRCode.CorrectLevel.L });
+    new QRCode(div.querySelector(`#qr-waze-${i}`), { text: wazeUrl, width: 56, height: 56, correctLevel: QRCode.CorrectLevel.L });
   });
 
   itin.classList.add('visible'); 
@@ -737,47 +795,31 @@ async function generateRoute() {
   document.getElementById('loading-bar').classList.remove('active');
 }
 
+// ── Interactive Print Preview Logic ──
 function triggerPrint() {
-  const body = document.body;
-  
-  // Set the print title dynamically
-  const tName = document.getElementById('trip-name').value || 'Field Audit Route';
-  const tDay = document.getElementById('trip-day').value ? ` - ${document.getElementById('trip-day').value}` : '';
-  const titleEl = document.getElementById('print-title');
-  if(titleEl) titleEl.textContent = tName + tDay;
-
-  body.classList.add('is-printing');
-  
+  document.body.classList.add('is-previewing');
   setTimeout(() => {
     map.invalidateSize();
-    
-    // THE FIX: Adding 120 pixels of padding to ALL sides (Top, Bottom, Left, Right)
-    // so the staggered labels have plenty of room and don't get cut off!
     if (routeLayer) {
-      map.fitBounds(routeLayer.getBounds(), { 
-        paddingTopLeft: [120, 120], 
-        paddingBottomRight: [120, 120], 
-        animate: false 
-      });
+      // Zooms in, but allows the user to drag the map to perfection
+      map.fitBounds(routeLayer.getBounds(), { padding: [40, 40], animate: false });
     }
-    
-    // Give the map tiles time to load the new, wider view
-    setTimeout(() => {
-      window.print();
-      body.classList.remove('is-printing');
-      
-      // Revert back to the desktop UI map bounds after printing
-      setTimeout(() => {
-        map.invalidateSize();
-        if (routeLayer) {
-          map.fitBounds(routeLayer.getBounds(), { 
-            paddingBottomRight: [30, 30], 
-            paddingTopLeft: [450, 30], 
-            animate: false 
-          });
-        }
-      }, 100);
-    }, 1200); 
+  }, 100);
+}
+
+function confirmPrint() {
+  // Instantly print whatever the user framed in the box
+  window.print();
+}
+
+function cancelPrint() {
+  document.body.classList.remove('is-previewing');
+  setTimeout(() => {
+    map.invalidateSize();
+    if (routeLayer) {
+      // Restores the normal desktop sidebar-adjusted padding
+      map.fitBounds(routeLayer.getBounds(), { paddingBottomRight: [30, 30], paddingTopLeft: [450, 30], animate: false });
+    }
   }, 100);
 }
 
@@ -787,16 +829,112 @@ function copyTextItinerary() {
   const tDay  = document.getElementById('trip-day').value ? ` - ${document.getElementById('trip-day').value}` : '';
   
   let txt = `🚗 ${tName.toUpperCase()}${tDay}\nTotal Stops: ${currentRoute.stops.length}\nEst. Drive: ${document.getElementById('stat-dist').textContent} (${document.getElementById('stat-time').textContent})\n\n`;
-  currentRoute.stops.forEach((s, i) => { txt += `📍 ${i+1}. ${s.name}\n🗺 Nav: https://www.google.com/maps/dir/?api=1&destination=${s.lat},${s.lon}\n\n`; });
+  currentRoute.stops.forEach((s, i) => { 
+    txt += `📍 ${i+1}. ${s.name}\n`;
+    txt += `🗺 Google Maps: https://www.google.com/maps/dir/?api=1&destination=${s.lat},${s.lon}\n`;
+    txt += `🚗 Waze: https://waze.com/ul?ll=${s.lat},${s.lon}&navigate=yes\n\n`; 
+  });
   navigator.clipboard.writeText(txt).then(() => {
     const btn = document.querySelector('button[onclick="copyTextItinerary()"]');
     const og = btn.textContent; btn.textContent = '✅ Copied!'; setTimeout(() => btn.textContent = og, 2000);
   });
 }
 
-function resetAll() { location.reload(); }
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape' && isPicking) cancelMapPick();
+});
 
-window.addEventListener('DOMContentLoaded', () => { initMap(); addStopRow(); addStopRow(); });
+// ── Soft Memory Reset ──
+function resetAll() {
+  // Save profile info to sessionStorage
+  sessionStorage.setItem('trip-name', document.getElementById('trip-name').value);
+  sessionStorage.setItem('trip-day', document.getElementById('trip-day').value);
+  location.reload(); 
+}
+
+// ── Drag & Drop Logic ──
+let draggedRow = null;
+function attachDragHandlers(row) {
+  row.addEventListener('dragstart', function() {
+    draggedRow = row;
+    setTimeout(() => row.classList.add('dragging'), 0);
+  });
+  row.addEventListener('dragend', function() {
+    row.classList.remove('dragging');
+    draggedRow = null;
+    updateRowBadges();
+  });
+  row.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    const container = document.getElementById('stops-container');
+    const afterElement = getDragAfterElement(container, e.clientY);
+    if (afterElement == null) { container.appendChild(draggedRow); } 
+    else { container.insertBefore(draggedRow, afterElement); }
+  });
+}
+
+function getDragAfterElement(container, y) {
+  const draggableElements = [...container.querySelectorAll('.stop-row:not(.dragging)')];
+  return draggableElements.reduce((closest, child) => {
+    const box = child.getBoundingClientRect();
+    const offset = y - box.top - box.height / 2;
+    if (offset < 0 && offset > closest.offset) {
+      return { offset: offset, element: child };
+    } else { return closest; }
+  }, { offset: Number.NEGATIVE_INFINITY }).element;
+}
+
+// ── Save/Load JSON Logic ──
+function saveRouteToFile() {
+  const name = document.getElementById('trip-name').value || 'Route';
+  const day = document.getElementById('trip-day').value;
+  const stops = Array.from(document.querySelectorAll('.location-input')).map(input => ({
+    val: input.value, lat: input.dataset.lat, lon: input.dataset.lon, geocoded: input.classList.contains('geocoded')
+  }));
+  const data = { name, day, stops };
+  const blob = new Blob([JSON.stringify(data)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `${name}_${day}.json`.replace(/\s+/g, '_'); a.click();
+}
+
+function loadRouteFromFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      document.getElementById('trip-name').value = data.name || '';
+      document.getElementById('trip-day').value = data.day || '';
+      document.getElementById('stops-container').innerHTML = ''; // Clear map
+      data.stops.forEach(s => {
+        addStopRow(s.val);
+        const inputs = document.querySelectorAll('.location-input');
+        const lastInput = inputs[inputs.length - 1];
+        if (s.geocoded && s.lat && s.lon) {
+          lastInput.dataset.lat = s.lat; lastInput.dataset.lon = s.lon;
+          lastInput.classList.add('geocoded');
+          lastInput.closest('.stop-input-wrap').querySelector('.geocode-indicator').classList.add('visible');
+        }
+      });
+    } catch(err) { alert("Invalid Route JSON file!"); }
+  };
+  reader.readAsText(file);
+}
+
+// ── On Load: Restore Memory ──
+window.addEventListener('DOMContentLoaded', () => { 
+  const savedName = sessionStorage.getItem('trip-name');
+  const savedDay = sessionStorage.getItem('trip-day');
+  
+  if (savedName !== null) document.getElementById('trip-name').value = savedName;
+  if (savedDay !== null) document.getElementById('trip-day').value = savedDay;
+
+  initMap(); 
+  addStopRow(); 
+  addStopRow(); 
+});
 </script>
 </body>
 </html>
