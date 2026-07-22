@@ -153,7 +153,29 @@
     #error-box { display: none; background: #fef2f2; border: 1px solid var(--color-end); border-radius: 8px; padding: 14px; font-size: 13px; color: var(--color-end); font-weight: 600; }
     #error-box.visible { display: block; }
 
-    .map-print-label { background: rgba(255,255,255,0.95); border: 2px solid #fff; border-radius: 6px; color: var(--text-dark); font-family: var(--font-main); font-size: 13px; font-weight: 800; padding: 4px 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); white-space: nowrap; }
+    /* Upgraded Label CSS - Semi-transparent so lines show through! */
+    .leaflet-tooltip.map-print-label { 
+      display: block !important; 
+      opacity: 1 !important; 
+      background: rgba(255,255,255,0.85) !important; /* Slightly transparent */
+      border: 2px solid #fff !important; 
+      border-radius: 6px !important; 
+      color: var(--text-dark) !important; 
+      font-family: var(--font-main) !important; 
+      font-size: 11px !important; 
+      font-weight: 800 !important; 
+      padding: 4px 8px !important; 
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2) !important; 
+      
+      /* Halo effect keeps text readable over lines */
+      text-shadow: 0px 0px 4px #ffffff, 0px 0px 6px #ffffff !important; 
+      
+      white-space: normal !important; 
+      max-width: 130px !important; 
+      text-align: center !important;
+      line-height: 1.2 !important;
+      z-index: 1000 !important;
+    }
     
     .ac-dropdown { position: fixed; z-index: 99999; background: #fff; border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); display: none; min-width: 250px; max-height: 250px; overflow-y: auto; }
     .ac-dropdown.open { display: block; }
@@ -230,10 +252,6 @@
   border-bottom: 2pt solid #000;
 }
 #print-title { font-size: 18pt; font-weight: 800; color: #000; }
-    .leaflet-tooltip {
-      display: none !important;
-      opacity: 0 !important;
-    }
   </style>
 </head>
 <body>
@@ -342,21 +360,42 @@ function formatDayInput(input) {
 function checkCoordinateBypass(input, rawValue) {
   const val = rawValue || (input ? input.value.trim() : '');
   
-  // THE FIX: Removed strict ^ and $ anchors so it extracts coords even if text like "(Makati)" is attached
-  const regex = /([-+]?\d{1,3}(?:\.\d+)?)\s*[°]?\s*([NSns])?\s*[,;]\s*([-+]?\d{1,3}(?:\.\d+)?)\s*[°]?\s*([EWew])?/;
+  // ALLOW tabs and spaces as separators ([,;\t ]+)
+  const regex = /([-+]?\d{1,3}(?:\.\d+)?)\s*[°]?\s*([NSnsEWew])?\s*[,;\t ]+\s*([-+]?\d{1,3}(?:\.\d+)?)\s*[°]?\s*([NSnsEWew])?/;
   const match = val.match(regex);
   
   if (match) {
-    let lat = parseFloat(match[1]);
-    if (match[2] && match[2].toUpperCase() === 'S') lat = -Math.abs(lat);
-    if (match[2] && match[2].toUpperCase() === 'N') lat = Math.abs(lat);
+    let num1 = parseFloat(match[1]);
+    let dir1 = match[2] ? match[2].toUpperCase() : null;
+    let num2 = parseFloat(match[3]);
+    let dir2 = match[4] ? match[4].toUpperCase() : null;
     
-    let lon = parseFloat(match[3]);
-    if (match[4] && match[4].toUpperCase() === 'W') lon = -Math.abs(lon);
-    if (match[4] && match[4].toUpperCase() === 'E') lon = Math.abs(lon);
+    let lat = null, lon = null;
 
-    // Safety check: Prevent false positives from normal addresses that happen to have numbers/commas
-    if (Math.abs(lat) > 90 || Math.abs(lon) > 180) return null;
+    // Safety: Prevent false positives for normal addresses (like "15th Ave, 3rd St")
+    if (!dir1 && !dir2 && !match[1].includes('.') && !match[3].includes('.')) return null;
+
+    // Auto-detect Lat vs Lon if no letters are provided
+    if (dir1 === 'N' || dir1 === 'S' || dir2 === 'E' || dir2 === 'W') {
+      lat = (dir1 === 'S') ? -Math.abs(num1) : num1;
+      lon = (dir2 === 'W') ? -Math.abs(num2) : num2;
+    } else if (dir1 === 'E' || dir1 === 'W' || dir2 === 'N' || dir2 === 'S') {
+      lon = (dir1 === 'W') ? -Math.abs(num1) : num1;
+      lat = (dir2 === 'S') ? -Math.abs(num2) : num2;
+    } else {
+      // No letters! We must infer based on physical boundaries.
+      // Lat is between -90 and 90. Lon is between -180 and 180.
+      if (Math.abs(num1) > 90 && Math.abs(num2) <= 90) {
+        lon = num1; lat = num2; // num1 is too big for Lat, must be Lon
+      } else if (Math.abs(num2) > 90 && Math.abs(num1) <= 90) {
+        lat = num1; lon = num2; // num2 is too big for Lat, must be Lon
+      } else {
+        lat = num1; lon = num2; // Default assume Lat, Lon
+      }
+    }
+
+    // Final boundary check
+    if (lat === null || lon === null || Math.abs(lat) > 90 || Math.abs(lon) > 180) return null;
 
     if (input) {
       input.dataset.lat = lat; input.dataset.lon = lon;
@@ -540,6 +579,14 @@ async function generateRoute() {
     }
   }
 
+  if (points.length < 2) {
+    document.getElementById('loading-bar').classList.remove('active');
+    const errorBox = document.getElementById('error-box');
+    errorBox.textContent = `Error: Could not resolve valid coordinates for enough locations. (Successfully found ${points.length} out of ${inputs.length})`;
+    errorBox.classList.add('visible');
+    return;
+  }
+
   let ordered = [...points];
   if (document.getElementById('optimize-toggle').checked) {
     const visited = new Array(points.length).fill(false);
@@ -593,14 +640,29 @@ async function generateRoute() {
   ordered.forEach((pt, i) => {
     const color = getMarkerColorHex(i, ordered.length);
     const mk = L.marker([pt.lat, pt.lon], { icon: customIcon(i+1, color) }).addTo(map);
-    mk.bindTooltip(`<b>${i+1}.</b> ${escapeHtml(pt.name)}`, { permanent: true, direction: 'top', className: 'map-print-label', offset: [0, -28] });
+    
+    // --- STAGGER LOGIC ---
+    const directions = ['top', 'right', 'bottom', 'left'];
+    const offsets = { 'top': [0, -35], 'right': [35, 0], 'bottom': [0, 35], 'left': [-35, 0] };
+    const dir = directions[i % 4];
+    const off = offsets[dir];
+    
+    // Show only Stop Number + First part of the address
+    const shortName = pt.name.split(',')[0] || "Unknown Location"; 
+    
+    mk.bindTooltip(`<b>${i+1}.</b> ${escapeHtml(shortName)}`, { 
+      permanent: true, 
+      direction: dir, 
+      className: 'map-print-label', 
+      offset: off 
+    });
     markers.push(mk);
   });
   
   const allCoords = [];
   geos.forEach(geo => geo.coordinates.forEach(c => allCoords.push([c[1], c[0]])));
   
-  routeLayer = L.polyline(allCoords, { color: '#0f172a', weight: 4, opacity: 0.7, dashArray: '6, 6' }).addTo(map);
+  routeLayer = L.polyline(allCoords, { color: '#0f172a', weight: 6, opacity: 1.0, dashArray: '8, 8' }).addTo(map);
   map.fitBounds(routeLayer.getBounds(), { paddingBottomRight: [30, 30], paddingTopLeft: [450, 30] });
 
   const fmtDist = (m) => m < 1000 ? `${Math.round(m)} m` : `${(m/1000).toFixed(1)} km`;
@@ -613,29 +675,61 @@ async function generateRoute() {
 
   const itin = document.getElementById('itinerary'); itin.innerHTML = '';
   ordered.forEach((stop, i) => {
-    const mapUrl = `https://www.google.com/maps/dir/?api=1&destination=${stop.lat},${stop.lon}`;
+    // Generate both URLs
+    const gmapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${stop.lat},${stop.lon}`;
+    const wazeUrl = `https://waze.com/ul?ll=${stop.lat},${stop.lon}&navigate=yes`;
+    
     const badgeColor = getBadgeColor(i, ordered.length);
     const div = document.createElement('div'); div.className = 'itin-stop';
     
-    // UPDATED: "End of Travel" logic applied here
+    // THE FIX: Shift the logic to show the "Incoming" travel time instead of "Outgoing"
+    let routeStats = '';
+    if (i === 0) {
+      routeStats = 'Start of Route';
+    } else {
+      // Look at the previous leg that brought us TO this stop
+      routeStats = `${fmtDist(legs[i-1].distanceM)}<br>${fmtTime(legs[i-1].durationS)}`;
+    }
+    
     div.innerHTML = `
       <div class="itin-badge" style="background: ${badgeColor}; border-color: ${badgeColor};">${i+1}</div>
       <div class="itin-info">
         <div class="itin-header">
            <div class="stop-name">${escapeHtml(stop.name)}</div>
-           <div class="stop-leg">${legs[i] ? `${fmtDist(legs[i].distanceM)}<br>${fmtTime(legs[i].durationS)}` : 'End of Travel'}</div>
+           <!-- Now this will show how long it took to arrive here -->
+           <div class="stop-leg">${routeStats}</div>
         </div>
         <div class="stop-meta">${stop.lat.toFixed(5)}, ${stop.lon.toFixed(5)}</div>
-        <div class="qr-wrapper" id="qr-${i}">
-           <div>
-             <span style="display:block; margin-bottom:2px;">Scan to</span>
-             <span style="display:block; font-size:12px; color:${badgeColor};">Navigate</span>
-           </div>
+        
+        <!-- TWO QR CODES SIDE BY SIDE WITH BRAND INDICATORS -->
+        <div style="display: flex; gap: 14px; margin-top: 14px; flex-wrap: wrap;">
+          <!-- Google Maps QR -->
+          <div class="qr-wrapper" id="qr-gmap-${i}">
+             <div style="display: flex; flex-direction: column; justify-content: center; min-width: 90px;">
+               <span style="font-size: 13px; font-weight: 800; color: #ea4335; display: flex; align-items: center; gap: 4px;">
+                 📍 Google Maps
+               </span>
+               <span style="font-size: 9px; color: var(--text-muted); margin-top: 3px; letter-spacing: 0.5px;">SCAN TO NAVIGATE</span>
+             </div>
+          </div>
+
+          <!-- Waze QR -->
+          <div class="qr-wrapper" id="qr-waze-${i}">
+             <div style="display: flex; flex-direction: column; justify-content: center; min-width: 90px;">
+               <span style="font-size: 13px; font-weight: 800; color: #0099ff; display: flex; align-items: center; gap: 4px;">
+                 🚙 Waze App
+               </span>
+               <span style="font-size: 9px; color: var(--text-muted); margin-top: 3px; letter-spacing: 0.5px;">SCAN TO NAVIGATE</span>
+             </div>
+          </div>
         </div>
       </div>
     `;
     itin.appendChild(div);
-    new QRCode(div.querySelector(`#qr-${i}`), { text: mapUrl, width: 64, height: 64, correctLevel: QRCode.CorrectLevel.L });
+    
+    // Render both QR codes
+    new QRCode(div.querySelector(`#qr-gmap-${i}`), { text: gmapsUrl, width: 64, height: 64, correctLevel: QRCode.CorrectLevel.L });
+    new QRCode(div.querySelector(`#qr-waze-${i}`), { text: wazeUrl, width: 64, height: 64, correctLevel: QRCode.CorrectLevel.L });
   });
 
   itin.classList.add('visible'); 
@@ -656,22 +750,32 @@ function triggerPrint() {
   
   setTimeout(() => {
     map.invalidateSize();
-    // THE FIX: Since labels are hidden, we use perfectly even padding to center the route!
+    
+    // THE FIX: Adding 120 pixels of padding to ALL sides (Top, Bottom, Left, Right)
+    // so the staggered labels have plenty of room and don't get cut off!
     if (routeLayer) {
       map.fitBounds(routeLayer.getBounds(), { 
-        padding: [40, 40], 
+        paddingTopLeft: [120, 120], 
+        paddingBottomRight: [120, 120], 
         animate: false 
       });
     }
     
+    // Give the map tiles time to load the new, wider view
     setTimeout(() => {
       window.print();
       body.classList.remove('is-printing');
       
+      // Revert back to the desktop UI map bounds after printing
       setTimeout(() => {
         map.invalidateSize();
-        // Revert back to the desktop UI map bounds (making room for the sidebar)
-        if (routeLayer) map.fitBounds(routeLayer.getBounds(), { paddingBottomRight: [30, 30], paddingTopLeft: [450, 30], animate: false });
+        if (routeLayer) {
+          map.fitBounds(routeLayer.getBounds(), { 
+            paddingBottomRight: [30, 30], 
+            paddingTopLeft: [450, 30], 
+            animate: false 
+          });
+        }
       }, 100);
     }, 1200); 
   }, 100);
