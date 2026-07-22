@@ -233,7 +233,7 @@
       border: 2px solid #000 !important; margin: 0 auto 20px auto !important; border-radius: 0 !important; z-index: 10;
     }
     
-    body.is-previewing .input-wrapper, body.is-previewing #stops-section, body.is-previewing #options-section, body.is-previewing #generate-btn, body.is-previewing .action-grid, body.is-previewing .leaflet-control-zoom, body.is-previewing .bulk-toggle, body.is-previewing #bulk-body, body.is-previewing #map-badge, body.is-previewing .leaflet-control-layers { display: none !important; }
+    body.is-previewing .input-wrapper, body.is-previewing #stops-section, body.is-previewing #options-section, body.is-previewing #generate-btn, body.is-previewing .action-grid, body.is-previewing .leaflet-control-zoom, body.is-previewing .bulk-toggle, body.is-previewing #bulk-body, body.is-previewing #map-badge, body.is-previewing .leaflet-control-layers, body.is-previewing #storage-row { display: none !important; }
     
     body.is-previewing #sidebar-header { display: none !important; }
     body.is-previewing #print-header { display: block !important; margin-bottom: 20px; border-bottom: 3px solid #111; padding-bottom: 10px; }
@@ -265,7 +265,7 @@
       #itinerary { display: block !important; height: auto !important; overflow: visible !important; position: relative !important; padding: 0 !important; margin: 0 !important; }
       #itinerary::before { left: 16pt !important; top: 26pt !important; bottom: 26pt !important; background: linear-gradient(to bottom, var(--color-start), var(--color-mid), var(--color-end)) !important; }
       
-      .input-wrapper, #stops-section, #options-section, #generate-btn, .action-grid, .leaflet-control-zoom, .bulk-toggle, #map-badge, .leaflet-control-layers { display: none !important; }
+      .input-wrapper, #stops-section, #options-section, #generate-btn, .action-grid, .leaflet-control-zoom, .bulk-toggle, #map-badge, .leaflet-control-layers, #storage-row { display: none !important; }
       
       #sidebar-header { display: none !important;}
       #map-area { display: block !important; width: 100% !important; height: 450px !important; border: 2pt solid #000 !important; margin-bottom: 20pt !important; page-break-inside: avoid; border-radius: 0 !important;}
@@ -661,10 +661,26 @@ async function getRouteLeg(fromLat, fromLon, toLat, toLon) {
 }
 
 async function generateRoute() {
-  const errorBox = document.getElementById('error-box'); errorBox.classList.remove('visible');
-  const inputs = Array.from(document.querySelectorAll('.location-input')).filter(i => i.value.trim());
-  if (inputs.length < 2) { errorBox.textContent = 'Enter at least 2 locations.'; errorBox.classList.add('visible'); return; }
+  // 1. Instantly lock the button to prevent double-clicks
+  const genBtn = document.getElementById('generate-btn');
+  genBtn.disabled = true;
+  genBtn.textContent = "⏳ Generating...";
 
+  const errorBox = document.getElementById('error-box'); 
+  errorBox.classList.remove('visible');
+  
+  const inputs = Array.from(document.querySelectorAll('.location-input')).filter(i => i.value.trim());
+  
+  // 2. If there's an error, show it, UNLOCK the button, and stop.
+  if (inputs.length < 2) { 
+    errorBox.textContent = 'Enter at least 2 locations.'; 
+    errorBox.classList.add('visible'); 
+    genBtn.disabled = false; 
+    genBtn.textContent = "Generate Optimized Route"; 
+    return; 
+  }
+
+  // 3. Otherwise, continue normally...
   formatDayInput(document.getElementById('trip-day'));
 
   initMap();
@@ -733,15 +749,23 @@ async function generateRoute() {
     const color = getMarkerColorHex(i, ordered.length);
     const mk = L.marker([pt.lat, pt.lon], { icon: customIcon(i+1, color) }).addTo(map);
     
-    // SMART TRUNCATOR: Only use the first part of the address for the map label
+    // INTELLIGENT TRUNCATOR: Handles short building numbers vs long landmark names
     let shortName = pt.name;
     const isCoordinate = /^[-+]?\d+(\.\d+)?\s*,\s*[-+]?\d+(\.\d+)?$/.test(shortName);
     
-    // If it's a real name (not just coordinates), trim it down drastically
     if (!isCoordinate) {
-      shortName = pt.name.split(',')[0].trim(); // Take everything before the first comma
-      if (shortName.length > 18) {
-        shortName = shortName.substring(0, 18) + '...'; // Hard cap at 18 characters
+      const parts = pt.name.split(',');
+      shortName = parts[0].trim();
+      
+      // If the first part is just a building/lot number (6 characters or less), 
+      // safely grab the street name (the second part) as well!
+      if (shortName.length <= 6 && parts.length > 1) {
+        shortName += ', ' + parts[1].trim();
+      }
+      
+      // Give it slightly more room (24 characters max) before adding the "..."
+      if (shortName.length > 24) {
+        shortName = shortName.substring(0, 24) + '...';
       }
     }
 
@@ -808,6 +832,9 @@ async function generateRoute() {
   itin.classList.add('visible'); 
   document.getElementById('action-grid').style.display = 'grid';
   document.getElementById('loading-bar').classList.remove('active');
+
+  genBtn.disabled = false;
+  genBtn.textContent = "Generate Optimized Route";
 }
 
 // ── Interactive Print Preview Logic ──
@@ -861,10 +888,11 @@ document.addEventListener('keydown', function(e) {
 
 // ── Soft Memory Reset ──
 function resetAll() {
-  // Save profile info to sessionStorage
-  sessionStorage.setItem('trip-name', document.getElementById('trip-name').value);
-  sessionStorage.setItem('trip-day', document.getElementById('trip-day').value);
-  location.reload(); 
+  if (confirm("🚨 Are you sure you want to clear this entire route? Any unsaved progress will be lost.")) {
+    sessionStorage.setItem('trip-name', document.getElementById('trip-name').value);
+    sessionStorage.setItem('trip-day', document.getElementById('trip-day').value);
+    location.reload(); 
+  }
 }
 
 // ── Drag & Drop Logic ──
