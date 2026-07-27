@@ -184,45 +184,29 @@
       cursor: grab; 
       pointer-events: auto; 
       
-      /* THE MAGIC RESIZE UPGRADES */
-      resize: both;         /* Allows dragging to resize horizontally and vertically */
-      overflow: hidden;     /* Required for resize to work properly */
-      max-width: 400px;     /* Increased limit so you have plenty of room to expand */
-      min-width: 80px;      /* Prevents the box from collapsing entirely */
+      resize: both;
+      overflow: hidden;
+      max-width: 400px;
+      min-width: 80px;
     }
     
     .map-print-label:active { cursor: grabbing; }
     
     /* The Modal Overlay */
-#label-modal-overlay {
-  display: none; 
-  position: fixed; 
-  inset: 0; 
-  background: rgba(15, 23, 42, 0.6); 
-  z-index: 9999999; 
-  align-items: center; 
-  justify-content: center;
-  backdrop-filter: blur(2px);
-}
-
-/* The Modal Box */
-#label-modal {
-  background: #ffffff; 
-  padding: 24px; 
-  border-radius: 16px; 
-  width: 320px; 
-  display: flex; 
-  flex-direction: column; 
-  gap: 16px; 
-  box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2);
-  font-family: var(--font-main);
-}
-
-.modal-title { margin: 0; font-size: 16px; color: var(--forest-dark); font-weight: 800; }
-.modal-label { font-size: 12px; font-weight: 700; color: var(--text-dark); margin-bottom: 6px; display: block; }
-.modal-input { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px; font-family: inherit; font-size: 13px; }
-.modal-input:focus { outline: 2px solid var(--forest-main); border-color: transparent; }
-.modal-row { display: flex; gap: 12px; }
+    #label-modal-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); 
+      z-index: 9999999; align-items: center; justify-content: center; backdrop-filter: blur(2px);
+    }
+    #label-modal {
+      background: #ffffff; padding: 24px; border-radius: 16px; width: 320px; 
+      display: flex; flex-direction: column; gap: 16px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2);
+      font-family: var(--font-main);
+    }
+    .modal-title { margin: 0; font-size: 16px; color: var(--forest-dark); font-weight: 800; }
+    .modal-label { font-size: 12px; font-weight: 700; color: var(--text-dark); margin-bottom: 6px; display: block; }
+    .modal-input { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px; font-family: inherit; font-size: 13px; }
+    .modal-input:focus { outline: 2px solid var(--forest-main); border-color: transparent; }
+    .modal-row { display: flex; gap: 12px; }
     
     .ac-dropdown { position: fixed; z-index: 99999; background: #fff; border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); display: none; min-width: 250px; max-height: 250px; overflow-y: auto; }
     .ac-dropdown.open { display: block; }
@@ -230,7 +214,6 @@
     .ac-item:last-child { border-bottom: none; }
     .ac-item:hover { background: var(--forest-light); color: var(--forest-main); }
 
-    /* ── Mobile Responsiveness ── */
     @media (max-width: 768px) {
       #app { flex-direction: column; }
       #map-area { position: relative; height: 40vh; inset: auto; flex-shrink: 0; z-index: 1;}
@@ -240,10 +223,6 @@
       .action-grid { grid-template-columns: 1fr; }
     }
 
-    /* ══════════════════════════════════════════════
-       THE BULLETPROOF EXACT-COLOR PRINT FIX
-    ══════════════════════════════════════════════ */
-    /* ── The Interactive Print Preview Mode ── */
     #print-preview-bar {
       display: none; position: fixed; top: 0; left: 0; right: 0; 
       background: var(--forest-dark); color: white; padding: 16px 24px; 
@@ -271,12 +250,11 @@
       border: 2px solid #000 !important; margin: 0 auto 20px auto !important; border-radius: 0 !important; z-index: 10;
     }
     
-    body.is-previewing .input-wrapper, body.is-previewing #stops-section, body.is-previewing #options-section, body.is-previewing #generate-btn, body.is-previewing .action-grid, body.is-previewing .leaflet-control-zoom, body.is-previewing .bulk-toggle, body.is-previewing #bulk-body, body.is-previewing #map-badge, body.is-previewing .leaflet-control-layers, body.is-previewing #storage-row { display: none !important; }
+    body.is-previewing .input-wrapper, body.is-previewing #stops-section, body.is-previewing #options-section, body.is-previewing #generate-btn, body.is-previewing .action-grid, body.is-previewing .leaflet-control-zoom, body.is-previewing .bulk-toggle, body.is-previewing #bulk-body, body.is-previewing #map-badge, body.is-previewing .leaflet-control-layers, body.is-previewing #storage-row, body.is-previewing #progress-wrapper { display: none !important; }
     
     body.is-previewing #sidebar-header { display: none !important; }
     body.is-previewing #print-header { display: block !important; margin-bottom: 20px; border-bottom: 3px solid #111; padding-bottom: 10px; }
     
-    /* Make the Preview screen mimic the exact paper styling */
     body.is-previewing #stats-bar { border: 2pt solid #000 !important; margin-bottom: 25pt !important; box-shadow: none !important; border-radius: 0 !important;}
     body.is-previewing .stat-val { color: #000 !important; font-size: 16pt !important; }
     body.is-previewing .itin-stop { padding: 10pt 0 !important; gap: 12pt !important;}
@@ -288,7 +266,6 @@
     body.is-previewing .qr-wrapper { display: flex !important; gap: 10pt !important; margin-top: 10pt !important; width: 100%; background: #fff; border: none; padding: 0;}
     body.is-previewing .qr-box { border: 1pt dashed #cbd5e1 !important; background: #fff !important; padding: 4pt !important; border-radius: 0 !important; display: flex !important; align-items: center !important; gap: 6pt !important;}
 
-    /* ── Native Print Rules ── */
     @media print {
       * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;}
       @page { margin: 10mm; }
@@ -303,7 +280,7 @@
       #itinerary { display: block !important; height: auto !important; overflow: visible !important; position: relative !important; padding: 0 !important; margin: 0 !important; }
       #itinerary::before { left: 16pt !important; top: 26pt !important; bottom: 26pt !important; background: linear-gradient(to bottom, var(--color-start), var(--color-mid), var(--color-end)) !important; }
       
-      .input-wrapper, #stops-section, #options-section, #generate-btn, .action-grid, .leaflet-control-zoom, .bulk-toggle, #map-badge, .leaflet-control-layers, #storage-row { display: none !important; }
+      .input-wrapper, #stops-section, #options-section, #generate-btn, .action-grid, .leaflet-control-zoom, .bulk-toggle, #map-badge, .leaflet-control-layers, #storage-row, #progress-wrapper { display: none !important; }
       
       #sidebar-header { display: none !important;}
       #map-area { display: block !important; width: 100% !important; height: 450px !important; border: 2pt solid #000 !important; margin-bottom: 20pt !important; page-break-inside: avoid; border-radius: 0 !important;}
@@ -323,39 +300,32 @@
     }
 
     .drag-handle { touch-action: none; }
+    .stop-content { flex: 1; display: flex; flex-direction: column; gap: 4px; overflow: hidden; }
+    .notes-input { width: 100%; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 6px; padding: 6px 10px; font-size: 11px; font-family: var(--font-main); color: var(--text-dark); transition: 0.2s; outline: none; resize: vertical; min-height: 32px; }
+    .notes-input:focus { border-color: var(--forest-main); background: #fff; }
+    .itin-note { margin-top: 8px; font-size: 12px; color: #475569; background: #f1f5f9; padding: 8px 10px; border-radius: 6px; border-left: 3px solid var(--forest-main); line-height: 1.4; }
 
-.stop-content { flex: 1; display: flex; flex-direction: column; gap: 4px; overflow: hidden; }
-.notes-input {
-  width: 100%;
-  background: #f8fafc;
-  border: 1px dashed #cbd5e1;
-  border-radius: 6px;
-  padding: 6px 10px;
-  font-size: 11px;
-  font-family: var(--font-main);
-  color: var(--text-dark);
-  transition: 0.2s;
-  outline: none;
-  resize: vertical;
-  min-height: 32px;
-}
-.notes-input:focus { border-color: var(--forest-main); background: #fff; }
-.itin-note {
-  margin-top: 8px;
-  font-size: 12px;
-  color: #475569;
-  background: #f1f5f9;
-  padding: 8px 10px;
-  border-radius: 6px;
-  border-left: 3px solid var(--forest-main);
-  line-height: 1.4;
-}
+    #mobile-sidebar-toggle { display: none; position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 9999; background: var(--forest-dark); color: white; border: none; padding: 14px 24px; border-radius: 30px; font-weight: 800; font-size: 14px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); cursor: pointer; gap: 8px; align-items: center; font-family: var(--font-main); }
+    #mobile-sidebar-toggle svg { width: 18px; height: 18px; }
 
+    @media (max-width: 768px) {
+      #mobile-sidebar-toggle { display: flex; }
+      #map-area { height: 100vh !important; position: fixed; inset: 0; }
+      #sidebar-wrapper { position: fixed; top: auto; bottom: 0; left: 0; width: 100%; height: 75vh; padding: 0; transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1); box-shadow: 0 -10px 25px rgba(0,0,0,0.15); z-index: 1000; }
+      #sidebar { border-radius: 20px 20px 0 0; border: none; }
+      #sidebar-wrapper.collapsed { transform: translateY(100%); }
+      .mobile-handle { display: flex; justify-content: center; padding: 12px; background: var(--surface); cursor: pointer; }
+      .mobile-handle::after { content: ''; width: 40px; height: 5px; background: #cbd5e1; border-radius: 3px; }
+    }
+    @media (min-width: 769px) { .mobile-handle { display: none; } }
+
+    .visited-toggle { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; color: var(--text-muted); cursor: pointer; }
+    .visited-checkbox { accent-color: var(--forest-main); width: 14px; height: 14px; cursor: pointer; }
+    .row-visited { opacity: 0.6; }
   </style>
 </head>
 <body>
 
-<!-- Interactive Print Preview Bar -->
 <div id="print-preview-bar">
   <div>
     <span style="font-weight: 800; font-size: 16px;">🖨️ Interactive Print Preview</span>
@@ -368,7 +338,6 @@
 </div>
 
 <div id="app">
-  <!-- ADDED: The hidden print header that shows up only during print/preview -->
   <div id="print-header" style="display:none;">
     <h1 id="ph-trip-name" style="margin:0; font-size: 24pt; color: #000; font-weight: 800;"></h1>
     <h2 id="ph-trip-day" style="margin: 4pt 0 8pt 0; font-size: 16pt; color: #333;"></h2>
@@ -380,8 +349,14 @@
     <div id="map"></div>
   </div>
 
-  <div id="sidebar-wrapper">
+  <button id="mobile-sidebar-toggle" onclick="toggleSidebar()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+    <span id="toggle-text">Show Map</span>
+  </button>
+
+  <div id="sidebar-wrapper" class="collapsed">
     <div id="sidebar">
+      <div class="mobile-handle" onclick="toggleSidebar()"></div>
       
       <div id="sidebar-header">
         <div class="logo-icon">🧭</div>
@@ -429,12 +404,12 @@
           </div>
         </div>
 
-        <!-- NEW: Save & Load Buttons placed clearly outside -->
-        <div id="storage-row" style="display: flex; gap: 10px; margin-bottom: 4px;">
+        <div id="storage-row" style="display: flex; gap: 10px; margin-bottom: 4px; align-items: center;">
           <button class="btn btn-secondary" style="font-size: 12px; padding: 10px; color: #334155; border-color: #cbd5e1;" onclick="saveRouteToFile()">💾 Save Route</button>
           <label class="btn btn-secondary" style="font-size: 12px; padding: 10px; margin: 0; color: #334155; border-color: #cbd5e1; cursor: pointer;">
             📂 Load Route <input type="file" style="display:none;" accept=".json" onchange="loadRouteFromFile(event)">
           </label>
+          <span id="save-indicator" style="font-size: 11px; color: var(--forest-main); font-weight: 800; margin-left: auto; opacity: 0; transition: 0.3s;"></span>
         </div>
 
         <button class="btn btn-primary" id="generate-btn" onclick="generateRoute()">Generate Optimized Route</button>
@@ -460,6 +435,17 @@
           <button class="btn btn-full" onclick="resetAll()">✕ Reset Route</button>
         </div>
 
+        <!-- NEW STANDALONE PROGRESS BAR -->
+        <div id="progress-wrapper" style="display:none; padding: 16px; border: 2px solid var(--forest-main); background: #fff; border-radius: 12px; margin-top: 16px; margin-bottom: 16px; box-shadow: 0 4px 12px rgba(22,101,52,0.15);">
+          <div style="display:flex; justify-content:space-between; font-size: 11px; font-weight: 800; color: var(--forest-main); margin-bottom: 8px;">
+            <span>TRIP PROGRESS</span>
+            <span id="prog-text">0 / 0</span>
+          </div>
+          <div style="height: 8px; background: var(--forest-light); border-radius: 4px; overflow: hidden;">
+            <div id="prog-fill" style="height: 100%; background: var(--forest-main); width: 0%; transition: width 0.4s ease-out;"></div>
+          </div>
+        </div>
+
         <div id="itinerary"></div>
         
       </div>
@@ -472,12 +458,10 @@
 <div id="label-modal-overlay">
   <div id="label-modal">
     <h3 class="modal-title">Edit Map Label</h3>
-    
     <div>
       <label class="modal-label">Label Text (HTML allowed)</label>
       <textarea id="modal-label-text" class="modal-input" rows="3" style="resize:vertical;"></textarea>
     </div>
-    
     <div class="modal-row">
       <div style="flex: 1;">
         <label class="modal-label">Font Size (px)</label>
@@ -488,7 +472,6 @@
         <input type="color" id="modal-label-color" style="width:100%; height:38px; border:none; padding:0; cursor:pointer; border-radius: 8px;">
       </div>
     </div>
-    
     <div>
       <label class="modal-label">Font Weight</label>
       <select id="modal-label-weight" class="modal-input">
@@ -498,7 +481,6 @@
         <option value="800">Extra Bold</option>
       </select>
     </div>
-    
     <div style="display:flex; gap:10px; margin-top:8px;">
       <button onclick="closeEditModal()" class="btn btn-secondary" style="box-shadow:none;">Cancel</button>
       <button onclick="saveLabelEdit()" class="btn btn-primary" style="box-shadow:none;">Save Changes</button>
@@ -512,33 +494,27 @@
 <script>
 let map = null, markers = [], routeLayer = null, currentRoute = null;
 let stopIdCounter = 0, activeInput = null, acDebounceTimer = null, geoCache = {};
-
 let isPicking = false;
 let pickingInput = null;
-
 let currentEditingLabel = null;
 let currentEditingInputRef = null;
+let autoSaveTimeout = null;
+let isMapFullscreen = true; 
 
-// Notice the new inputRef parameter
 function openEditModal(el, inputRef) {
   currentEditingLabel = el;
   currentEditingInputRef = inputRef; 
-  
   document.getElementById('modal-label-text').value = el.innerHTML;
-  
   const computed = window.getComputedStyle(el);
   document.getElementById('modal-label-size').value = parseInt(computed.fontSize) || 11;
   document.getElementById('modal-label-color').value = rgbToHex(computed.color);
-  
   let weight = computed.fontWeight;
   if (weight === '400') weight = 'normal';
   if (weight === '700') weight = 'bold';
   document.getElementById('modal-label-weight').value = weight;
-  
   document.getElementById('label-modal-overlay').style.display = 'flex';
 }
 
-// Native DOM-based HTML Sanitizer
 function sanitizeHTML(html) {
   const doc = new DOMParser().parseFromString(html, 'text/html');
   const scripts = doc.querySelectorAll('script, iframe, object, embed, link, style, meta');
@@ -556,26 +532,20 @@ function sanitizeHTML(html) {
 
 function saveLabelEdit() {
   if (!currentEditingLabel || !currentEditingInputRef) return;
-  
   const cleanText = sanitizeHTML(document.getElementById('modal-label-text').value);
   const size = document.getElementById('modal-label-size').value;
   const color = document.getElementById('modal-label-color').value;
   const weight = document.getElementById('modal-label-weight').value;
-
-  // 1. Update the map visually
   currentEditingLabel.innerHTML = cleanText;
   currentEditingLabel.style.fontSize = size + 'px';
   currentEditingLabel.style.color = color;
   currentEditingLabel.style.fontWeight = weight;
-  
-  // 2. Save it back to the sidebar's data attributes for offline persistence
   currentEditingInputRef.dataset.customLabel = cleanText;
   currentEditingInputRef.dataset.labelSize = size;
   currentEditingInputRef.dataset.labelColor = color;
   currentEditingInputRef.dataset.labelWeight = weight;
-  
   closeEditModal();
-  autoSave(); // Trigger local storage save
+  autoSave();
 }
 
 function closeEditModal() {
@@ -583,14 +553,12 @@ function closeEditModal() {
   currentEditingLabel = null;
 }
 
-// Helper to convert rgb(x,y,z) to #hex for the color picker
 function rgbToHex(rgb) {
   const arr = rgb.match(/\d+/g);
   if (!arr || arr.length < 3) return '#0f172a';
   return "#" + arr.slice(0, 3).map(x => parseInt(x).toString(16).padStart(2, '0')).join('');
 }
 
-// Close modal if user clicks outside the white box
 document.getElementById('label-modal-overlay').addEventListener('click', function(e) {
   if (e.target === this) closeEditModal();
 });
@@ -611,11 +579,9 @@ function checkCoordinateBypass(input, rawValue) {
     let lat = parseFloat(match[1]);
     if (match[2] && match[2].toUpperCase() === 'S') lat = -Math.abs(lat);
     if (match[2] && match[2].toUpperCase() === 'N') lat = Math.abs(lat);
-    
     let lon = parseFloat(match[3]);
     if (match[4] && match[4].toUpperCase() === 'W') lon = -Math.abs(lon);
     if (match[4] && match[4].toUpperCase() === 'E') lon = Math.abs(lon);
-
     if (input) {
       input.dataset.lat = lat; input.dataset.lon = lon;
       input.classList.add('geocoded');
@@ -639,19 +605,12 @@ async function reverseGeocode(lat, lon) {
 function toggleMapPick(btn) {
   const row = btn.closest('.stop-row');
   const input = row.querySelector('.location-input');
-  
-  if (pickingInput === input) {
-    cancelMapPick();
-    return;
-  }
-  
+  if (pickingInput === input) { cancelMapPick(); return; }
   cancelMapPick();
   isPicking = true;
   pickingInput = input;
-  
   btn.classList.add('active');
   document.getElementById('map').classList.add('picking-mode');
-  
   const badge = document.getElementById('map-badge');
   badge.innerHTML = '🎯 <b>Click anywhere</b> on the map to set location';
   badge.style.background = 'var(--forest-main)';
@@ -662,11 +621,9 @@ function cancelMapPick() {
   if (!pickingInput) return;
   const btn = pickingInput.closest('.stop-input-wrap').querySelector('.pick-btn');
   if (btn) btn.classList.remove('active');
-  
   isPicking = false;
   pickingInput = null;
   document.getElementById('map').classList.remove('picking-mode');
-  
   const badge = document.getElementById('map-badge');
   badge.innerHTML = 'Map View';
   badge.style.background = 'rgba(255,255,255,0.95)';
@@ -683,50 +640,32 @@ function processBulkImport() {
   document.getElementById('bulk-input').value = '';
   document.getElementById('bulk-body').classList.remove('open');
   updateRowBadges();
+  autoSave();
 }
 
 function initMap() {
   if (map) return;
   map = L.map('map', { center: [14.5995, 120.9842], zoom: 12, zoomControl: false });
   L.control.zoom({ position: 'bottomright' }).addTo(map);
-
-  // 1. BASE MAPS (The Ground - NO TEXT)
   const defaultMap = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', { maxZoom: 19 });
   const satelliteMap = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19 });
-
-  // 2. OVERLAY (The Text - Street/City names with white halos for readability)
   const mapLabels = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png', { maxZoom: 19 });
-
-  // 3. Load Default Map AND Labels on startup
   defaultMap.addTo(map);
   mapLabels.addTo(map);
-
-  // 4. Build the Toggle Menu
-  const baseMaps = {
-    "Default Map": defaultMap,
-    "Satellite View": satelliteMap
-  };
-  const overlayMaps = {
-    "🗺️ Show Street/City Labels": mapLabels
-  };
+  L.control.layers({ "Default Map": defaultMap, "Satellite View": satelliteMap }, { "🗺️ Show Street/City Labels": mapLabels }, { position: 'bottomright' }).addTo(map);
   
-  L.control.layers(baseMaps, overlayMaps, { position: 'bottomright' }).addTo(map);
-  
-  // Keep the Picker Click Logic intact
   map.on('click', async function(e) {
     if (!isPicking || !pickingInput) return;
     const lat = e.latlng.lat; const lon = e.latlng.lng;
     const currentInput = pickingInput; 
-    
     currentInput.value = "Capturing location...";
     cancelMapPick(); 
-    
     const rgName = await reverseGeocode(lat, lon);
     currentInput.value = rgName ? rgName : `${lat.toFixed(5)}, ${lon.toFixed(5)}`;
-    
     currentInput.dataset.lat = lat; currentInput.dataset.lon = lon;
     currentInput.classList.add('geocoded');
     currentInput.closest('.stop-input-wrap').querySelector('.geocode-indicator').classList.add('visible');
+    autoSave();
   });
 }
 
@@ -759,11 +698,18 @@ function addStopRow(prefillValue = '', triggerSave = true) {
       <div class="stop-input-wrap">
         <input type="text" class="location-input" placeholder="Search, paste Lat,Lon, or Pick" value="${escapeHtml(prefillValue)}" />
         <span class="geocode-indicator">✓</span>
-        <button class="pick-btn" onclick="toggleMapPick(this)" title="Pick location from map">
+        <button class="pick-btn" onclick="toggleMapPick(this)" title="Pick">
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="22" y1="12" x2="18" y2="12"></line><line x1="6" y1="12" x2="2" y2="12"></line><line x1="12" y1="6" x2="12" y2="2"></line><line x1="12" y1="22" x2="12" y2="18"></line></svg>
         </button>
       </div>
       <textarea class="notes-input" placeholder="Notes (e.g. Audit checks, contacts)" oninput="autoSave()"></textarea>
+      
+      <div style="display:flex; justify-content:flex-end; margin-top: 4px;">
+         <label class="visited-toggle">
+           <input type="checkbox" class="visited-checkbox" onchange="toggleVisited(this)">
+           <span>Mark as Visited</span>
+         </label>
+      </div>
     </div>
     <button class="remove-btn" onclick="removeStopRow(this)">✕</button>
   `;
@@ -771,14 +717,10 @@ function addStopRow(prefillValue = '', triggerSave = true) {
   updateRowBadges();
   
   const input = row.querySelector('.location-input');
-  
-  // Hook autocomplete to trigger autoSave
   input.addEventListener('input', autoSave);
-  
   attachInputHandlers(input);
   attachDragHandlers(row);
   if (prefillValue) checkCoordinateBypass(input, prefillValue);
-  
   if (triggerSave) autoSave();
   return row;
 }
@@ -823,6 +765,7 @@ function renderDropdown(input, results) {
       input.value = r.display_name.split(',')[0]; input.dataset.lat = r.lat; input.dataset.lon = r.lon;
       input.classList.add('geocoded'); input.closest('.stop-input-wrap').querySelector('.geocode-indicator').classList.add('visible');
       hideDropdown();
+      autoSave();
     });
     dropdown.appendChild(item);
   });
@@ -862,17 +805,13 @@ async function getRouteLeg(fromLat, fromLon, toLat, toLon) {
 }
 
 async function generateRoute() {
-  // 1. Instantly lock the button to prevent double-clicks
   const genBtn = document.getElementById('generate-btn');
   genBtn.disabled = true;
   genBtn.textContent = "⏳ Generating...";
-
   const errorBox = document.getElementById('error-box'); 
   errorBox.classList.remove('visible');
   
   const inputs = Array.from(document.querySelectorAll('.location-input')).filter(i => i.value.trim());
-  
-  // 2. If there's an error, show it, UNLOCK the button, and stop.
   if (inputs.length < 2) { 
     errorBox.textContent = 'Enter at least 2 locations.'; 
     errorBox.classList.add('visible'); 
@@ -881,9 +820,7 @@ async function generateRoute() {
     return; 
   }
 
-  // 3. Otherwise, continue normally...
   formatDayInput(document.getElementById('trip-day'));
-
   initMap();
   markers.forEach(m => map.removeLayer(m)); markers = [];
   if (routeLayer) { map.removeLayer(routeLayer); routeLayer = null; }
@@ -893,31 +830,28 @@ async function generateRoute() {
   
   for (let i = 0; i < inputs.length; i++) {
     let inp = inputs[i]; let nameVal = inp.value;
-    
     if (inp.dataset.lat && inp.dataset.lon) {
       if (/^\s*[-+]?\d{1,3}(?:\.\d+)?\s*[°]?\s*[NSns]?\s*[,;]?\s*[-+]?\d{1,3}(?:\.\d+)?\s*[°]?\s*[EWew]?\s*$/.test(nameVal)) {
          document.getElementById('loading-text').textContent = `Identifying place ${i+1} of ${inputs.length}...`;
-         await sleep(1100); // STRICT 1.1s API Throttle
+         await sleep(1100); 
          const rgName = await reverseGeocode(inp.dataset.lat, inp.dataset.lon);
          if (rgName) nameVal = rgName; 
       }
-      // Find where you push to points[] and modify it like this:
       points.push({ 
-        name: nameVal, 
-        lat: parseFloat(inp.dataset.lat), 
-        lon: parseFloat(inp.dataset.lon),
-        inputRef: inp, // <-- NEW
-        notes: inp.closest('.stop-row').querySelector('.notes-input').value // <-- NEW
+        name: nameVal, lat: parseFloat(inp.dataset.lat), lon: parseFloat(inp.dataset.lon),
+        inputRef: inp, notes: inp.closest('.stop-row').querySelector('.notes-input').value
       });
+    } else {
+      document.getElementById('loading-text').textContent = `Geocoding location ${i+1} of ${inputs.length}...`;
+      await sleep(1100);
+      const geo = await fallbackGeocode(nameVal);
+      if (geo) points.push({ name: nameVal, lat: geo.lat, lon: geo.lon, inputRef: inp, notes: inp.closest('.stop-row').querySelector('.notes-input').value });
     }
   }
 
   let ordered = [...points];
-  
   if (document.getElementById('optimize-toggle').checked && points.length > 2) {
     document.getElementById('loading-text').textContent = `Running 2-Opt Optimization...`;
-    
-    // Step 1: Initial Nearest Neighbor
     const visited = new Array(points.length).fill(false);
     ordered = [points[0]]; visited[0] = true;
     for (let i = 1; i < points.length; i++) {
@@ -931,19 +865,15 @@ async function generateRoute() {
       visited[best] = true; ordered.push(points[best]);
     }
     
-    // Step 2: 2-Opt Algorithm to untangle crossing paths
     let improvement = true;
     let iterations = 0;
-    while (improvement && iterations < 50) { // Limit to 50 loops to prevent UI freeze on massive lists
+    while (improvement && iterations < 50) {
       improvement = false;
       for (let i = 1; i < ordered.length - 2; i++) {
         for (let k = i + 1; k < ordered.length - 1; k++) {
-          let d1 = haversine(ordered[i-1].lat, ordered[i-1].lon, ordered[i].lat, ordered[i].lon) +
-                   haversine(ordered[k].lat, ordered[k].lon, ordered[k+1].lat, ordered[k+1].lon);
-          let d2 = haversine(ordered[i-1].lat, ordered[i-1].lon, ordered[k].lat, ordered[k].lon) +
-                   haversine(ordered[i].lat, ordered[i].lon, ordered[k+1].lat, ordered[k+1].lon);
-          
-          if (d2 < d1 - 0.001) { // -0.001 to prevent micro-fluctuation loops
+          let d1 = haversine(ordered[i-1].lat, ordered[i-1].lon, ordered[i].lat, ordered[i].lon) + haversine(ordered[k].lat, ordered[k].lon, ordered[k+1].lat, ordered[k+1].lon);
+          let d2 = haversine(ordered[i-1].lat, ordered[i-1].lon, ordered[k].lat, ordered[k].lon) + haversine(ordered[i].lat, ordered[i].lon, ordered[k+1].lat, ordered[k+1].lon);
+          if (d2 < d1 - 0.001) {
             const subRoute = ordered.slice(i, k + 1).reverse();
             ordered.splice(i, k - i + 1, ...subRoute);
             improvement = true;
@@ -979,33 +909,22 @@ async function generateRoute() {
   ordered.forEach((pt, i) => {
     const color = getMarkerColorHex(i, ordered.length);
     const mk = L.marker([pt.lat, pt.lon], { icon: customIcon(i+1, color) }).addTo(map);
+    markers.push(mk); 
     
-    // INTELLIGENT TRUNCATOR: Handles short building numbers vs long landmark names
     let shortName = pt.name;
     const isCoordinate = /^[-+]?\d+(\.\d+)?\s*,\s*[-+]?\d+(\.\d+)?$/.test(shortName);
-    
     if (!isCoordinate) {
       const parts = pt.name.split(',');
       shortName = parts[0].trim();
-      
-      // If the first part is just a building/lot number (6 characters or less), 
-      // safely grab the street name (the second part) as well!
-      if (shortName.length <= 6 && parts.length > 1) {
-        shortName += ', ' + parts[1].trim();
-      }
-      
-      // Give it slightly more room (24 characters max) before adding the "..."
-      if (shortName.length > 24) {
-        shortName = shortName.substring(0, 24) + '...';
-      }
+      if (shortName.length <= 6 && parts.length > 1) shortName += ', ' + parts[1].trim();
+      if (shortName.length > 24) shortName = shortName.substring(0, 24) + '...';
     }
 
-    // We NO LONGER bind the label directly to the circle.
-    markers.push(mk); 
-
-     let labelText = pt.inputRef.dataset.customLabel || `<b>${i+1}.</b> ${escapeHtml(shortName)}`;
+    let isVisited = pt.inputRef.closest('.stop-row').querySelector('.visited-checkbox').checked;
+    let checkPrefix = isVisited ? `<span style="color:#166534; font-size:14px;">✓</span> ` : '';
+    let labelText = pt.inputRef.dataset.customLabel || `${checkPrefix}<b>${i+1}.</b> ${escapeHtml(shortName)}`;
     let lSize = pt.inputRef.dataset.labelSize || 11;
-    let lColor = pt.inputRef.dataset.labelColor || '#0f172a';
+    let lColor = isVisited ? '#166534' : (pt.inputRef.dataset.labelColor || '#0f172a');
     let lWeight = pt.inputRef.dataset.labelWeight || '800';
 
     const labelIcon = L.divIcon({
@@ -1016,10 +935,11 @@ async function generateRoute() {
     });
 
     const labelMk = L.marker([pt.lat, pt.lon], { icon: labelIcon, draggable: true, zIndexOffset: 1000 }).addTo(map);
-
+    
     labelMk.on('add', function() {
        const el = this.getElement().querySelector('.map-print-label');
        L.DomEvent.disableClickPropagation(el); 
+       
        el.addEventListener('mousedown', function(e) {
          if ((e.offsetX > el.offsetWidth - 20) && (e.offsetY > el.offsetHeight - 20)) {
            labelMk.dragging.disable(); map.dragging.disable();
@@ -1029,10 +949,10 @@ async function generateRoute() {
        });
     });
 
-    // Pass pt.inputRef to link the map back to the UI!
+    // Use Leaflet's click handler instead of HTML click handler!
     labelMk.on('click', function() {
-      const el = this.getElement().querySelector('.map-print-label');
-      openEditModal(el, pt.inputRef);
+       const el = this.getElement().querySelector('.map-print-label');
+       openEditModal(el, pt.inputRef);
     });
     
     markers.push(labelMk);
@@ -1040,8 +960,6 @@ async function generateRoute() {
   
   const allCoords = [];
   geos.forEach(geo => geo.coordinates.forEach(c => allCoords.push([c[1], c[0]])));
-  
-  // Bright Cyan line, highly visible on both Light maps and Dark Satellite maps
   routeLayer = L.polyline(allCoords, { color: '#06b6d4', weight: 5, opacity: 1, dashArray: '8, 8' }).addTo(map);
   map.fitBounds(routeLayer.getBounds(), { paddingBottomRight: [30, 30], paddingTopLeft: [450, 30] });
 
@@ -1059,31 +977,27 @@ async function generateRoute() {
     const wazeUrl = `https://waze.com/ul?ll=${stop.lat},${stop.lon}&navigate=yes`;
     const badgeColor = getBadgeColor(i, ordered.length);
     
-    // ── NEW LOGIC: Arrival Metrics instead of Departure Metrics ──
     let travelText = '';
     if (i === 0) {
       travelText = '<span style="color: var(--text-muted);">Starting Point</span>';
     } else {
-      const prevLeg = legs[i - 1]; // Grab the distance FROM the previous stop TO this stop
+      const prevLeg = legs[i - 1]; 
       if (prevLeg) {
         travelText = `${fmtDist(prevLeg.distanceM)}<br>${fmtTime(prevLeg.durationS)}`;
-        
-        // ADDED: Tag the very last location as the "End Point"
-        if (i === ordered.length - 1) {
-          travelText += `<br><span style="color: var(--color-end); font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; line-height: 2;">End Point</span>`;
-        }
+        if (i === ordered.length - 1) travelText += `<br><span style="color: var(--color-end); font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; line-height: 2;">End Point</span>`;
       }
     }
 
     const div = document.createElement('div'); div.className = 'itin-stop';
-
     let noteHtml = stop.notes ? `<div class="itin-note">${escapeHtml(stop.notes)}</div>` : '';
+    let isVisited = stop.inputRef.closest('.stop-row').querySelector('.visited-checkbox').checked;
+    let stopNameHtml = isVisited ? `<span style="color:#166534;">✓</span> ${escapeHtml(stop.name)}` : escapeHtml(stop.name);
     
     div.innerHTML = `
       <div class="itin-badge" style="background: ${badgeColor}; border-color: ${badgeColor};">${i+1}</div>
       <div class="itin-info">
         <div class="itin-header">
-           <div class="stop-name">${escapeHtml(stop.name)}</div>
+           <div class="stop-name">${stopNameHtml}</div>
            <div class="stop-leg">${travelText}</div>
         </div>
         <div class="stop-meta">${stop.lat.toFixed(5)}, ${stop.lon.toFixed(5)}</div>
@@ -1109,8 +1023,6 @@ async function generateRoute() {
       </div>
     `;
     itin.appendChild(div);
-    
-    // Generate Dual QRs
     new QRCode(div.querySelector(`#qr-gmap-${i}`), { text: gmapsUrl, width: 56, height: 56, correctLevel: QRCode.CorrectLevel.L });
     new QRCode(div.querySelector(`#qr-waze-${i}`), { text: wazeUrl, width: 56, height: 56, correctLevel: QRCode.CorrectLevel.L });
   });
@@ -1119,47 +1031,33 @@ async function generateRoute() {
   document.getElementById('action-grid').style.display = 'grid';
   document.getElementById('loading-bar').classList.remove('active');
 
+  updateProgressUI();
   genBtn.disabled = false;
   genBtn.textContent = "Generate Optimized Route";
 }
 
-// ── Interactive Print Preview Logic ──
 function triggerPrint() {
-  // 1. Grab the latest Trip Name and Day right before previewing!
   const tName = document.getElementById('trip-name').value.trim() || 'Audit Route Plan';
   const tDay  = document.getElementById('trip-day').value.trim() || '';
-  
-  // 2. Safely populate the text content of the print header elements we just added
   document.getElementById('ph-trip-name').textContent = tName;
   document.getElementById('ph-trip-day').textContent = tDay;
-  
   const d = new Date();
   document.getElementById('ph-date').textContent = `Generated on: ${d.toLocaleDateString()} at ${d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
 
-  // 3. Begin the preview sequence (keeps your awesome interactive pan/zoom intact!)
   document.body.classList.add('is-previewing');
   setTimeout(() => {
     map.invalidateSize();
-    if (routeLayer) {
-      // Zooms in, but allows the user to drag the map to perfection
-      map.fitBounds(routeLayer.getBounds(), { padding: [40, 40], animate: false });
-    }
+    if (routeLayer) map.fitBounds(routeLayer.getBounds(), { padding: [40, 40], animate: false });
   }, 100);
 }
 
-function confirmPrint() {
-  // Instantly print whatever the user framed in the box
-  window.print();
-}
+function confirmPrint() { window.print(); }
 
 function cancelPrint() {
   document.body.classList.remove('is-previewing');
   setTimeout(() => {
     map.invalidateSize();
-    if (routeLayer) {
-      // Restores the normal desktop sidebar-adjusted padding
-      map.fitBounds(routeLayer.getBounds(), { paddingBottomRight: [30, 30], paddingTopLeft: [450, 30], animate: false });
-    }
+    if (routeLayer) map.fitBounds(routeLayer.getBounds(), { paddingBottomRight: [30, 30], paddingTopLeft: [450, 30], animate: false });
   }, 100);
 }
 
@@ -1167,10 +1065,11 @@ function copyTextItinerary() {
   if (!currentRoute) return;
   const tName = document.getElementById('trip-name').value || 'Field Audit Route';
   const tDay  = document.getElementById('trip-day').value ? ` - ${document.getElementById('trip-day').value}` : '';
-  
   let txt = `🚗 ${tName.toUpperCase()}${tDay}\nTotal Stops: ${currentRoute.stops.length}\nEst. Drive: ${document.getElementById('stat-dist').textContent} (${document.getElementById('stat-time').textContent})\n\n`;
   currentRoute.stops.forEach((s, i) => { 
-    txt += `📍 ${i+1}. ${s.name}\n`;
+    let isVis = s.inputRef.closest('.stop-row').querySelector('.visited-checkbox').checked ? '✓ ' : '';
+    txt += `📍 ${i+1}. ${isVis}${s.name}\n`;
+    if (s.notes) txt += `📝 Notes: ${s.notes}\n`;
     txt += `🗺 Google Maps: https://www.google.com/maps/dir/?api=1&destination=${s.lat},${s.lon}\n`;
     txt += `🚗 Waze: https://waze.com/ul?ll=${s.lat},${s.lon}&navigate=yes\n\n`; 
   });
@@ -1180,11 +1079,8 @@ function copyTextItinerary() {
   });
 }
 
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape' && isPicking) cancelMapPick();
-});
+document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && isPicking) cancelMapPick(); });
 
-// ── Soft Memory Reset ──
 function resetAll() {
   if (confirm("🚨 Are you sure you want to clear this entire route? All offline data and notes will be deleted.")) {
     localStorage.removeItem('dennav_offline_state');
@@ -1193,51 +1089,32 @@ function resetAll() {
   }
 }
 
-// ── Drag & Drop Logic ──
 let draggedRow = null;
 function attachDragHandlers(row) {
-  // Desktop Drag
-  row.addEventListener('dragstart', function() {
-    draggedRow = row;
-    setTimeout(() => row.classList.add('dragging'), 0);
-  });
-  row.addEventListener('dragend', function() {
-    row.classList.remove('dragging');
-    draggedRow = null;
-    updateRowBadges();
-  });
+  row.addEventListener('dragstart', function() { draggedRow = row; setTimeout(() => row.classList.add('dragging'), 0); });
+  row.addEventListener('dragend', function() { row.classList.remove('dragging'); draggedRow = null; updateRowBadges(); autoSave(); });
   row.addEventListener('dragover', function(e) {
     e.preventDefault();
     const container = document.getElementById('stops-container');
     const afterElement = getDragAfterElement(container, e.clientY);
-    if (afterElement == null) { container.appendChild(draggedRow); } 
-    else { container.insertBefore(draggedRow, afterElement); }
+    if (afterElement == null) container.appendChild(draggedRow); 
+    else container.insertBefore(draggedRow, afterElement);
   });
-
-  // Mobile Touch Drag
   row.addEventListener('touchstart', (e) => {
-    // Only allow drag if touching the handle
-    if (e.target.classList.contains('drag-handle')) {
-      draggedRow = row;
-      setTimeout(() => row.classList.add('dragging'), 0);
-    }
+    if (e.target.classList.contains('drag-handle')) { draggedRow = row; setTimeout(() => row.classList.add('dragging'), 0); }
   }, { passive: true });
-
   row.addEventListener('touchmove', (e) => {
     if (!draggedRow) return;
-    e.preventDefault(); // Stop mobile screen from scrolling while dragging
+    e.preventDefault(); 
     const touch = e.touches[0];
     const container = document.getElementById('stops-container');
     const afterElement = getDragAfterElement(container, touch.clientY);
-    if (afterElement == null) { container.appendChild(draggedRow); } 
-    else { container.insertBefore(draggedRow, afterElement); }
+    if (afterElement == null) container.appendChild(draggedRow); 
+    else container.insertBefore(draggedRow, afterElement);
   }, { passive: false });
-
   row.addEventListener('touchend', () => {
     if (!draggedRow) return;
-    draggedRow.classList.remove('dragging');
-    draggedRow = null;
-    updateRowBadges();
+    draggedRow.classList.remove('dragging'); draggedRow = null; updateRowBadges(); autoSave();
   });
 }
 
@@ -1246,48 +1123,42 @@ function getDragAfterElement(container, y) {
   return draggableElements.reduce((closest, child) => {
     const box = child.getBoundingClientRect();
     const offset = y - box.top - box.height / 2;
-    if (offset < 0 && offset > closest.offset) {
-      return { offset: offset, element: child };
-    } else { return closest; }
+    if (offset < 0 && offset > closest.offset) return { offset: offset, element: child };
+    else return closest;
   }, { offset: Number.NEGATIVE_INFINITY }).element;
 }
 
-let autoSaveTimeout = null;
-
-// 1. Trigger this whenever anything changes
 function autoSave() {
   clearTimeout(autoSaveTimeout);
   autoSaveTimeout = setTimeout(() => {
     localStorage.setItem('dennav_offline_state', JSON.stringify(serializeRouteState()));
-  }, 1000); // 1-second debounce
+    const ind = document.getElementById('save-indicator');
+    if (ind) {
+      ind.textContent = `Saved locally ✓ ${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+      ind.style.opacity = 1;
+      setTimeout(() => ind.style.opacity = 0.5, 3000);
+    }
+  }, 1000);
 }
 
-// 2. Gather all data from the UI & Datasets
 function serializeRouteState() {
   const stops = Array.from(document.querySelectorAll('.stop-row')).map(row => {
     const input = row.querySelector('.location-input');
     const notes = row.querySelector('.notes-input');
     return {
-      val: input.value,
-      lat: input.dataset.lat || '',
-      lon: input.dataset.lon || '',
+      val: input.value, lat: input.dataset.lat || '', lon: input.dataset.lon || '',
       geocoded: input.classList.contains('geocoded'),
-      customLabel: input.dataset.customLabel || '',
-      labelSize: input.dataset.labelSize || '',
-      labelColor: input.dataset.labelColor || '',
-      labelWeight: input.dataset.labelWeight || '',
-      notes: notes.value
+      customLabel: input.dataset.customLabel || '', labelSize: input.dataset.labelSize || '',
+      labelColor: input.dataset.labelColor || '', labelWeight: input.dataset.labelWeight || '',
+      visited: row.querySelector('.visited-checkbox').checked, notes: notes.value
     };
   });
   return {
-    name: document.getElementById('trip-name').value,
-    day: document.getElementById('trip-day').value,
-    optimize: document.getElementById('optimize-toggle').checked,
-    stops: stops
+    name: document.getElementById('trip-name').value, day: document.getElementById('trip-day').value,
+    optimize: document.getElementById('optimize-toggle').checked, stops: stops
   };
 }
 
-// 3. Inject data back into the UI (Used by LocalStorage and JSON Import)
 function applyRouteState(data) {
   if (!data) return;
   if (data.name !== undefined) document.getElementById('trip-name').value = data.name;
@@ -1295,11 +1166,11 @@ function applyRouteState(data) {
   if (data.optimize !== undefined) document.getElementById('optimize-toggle').checked = data.optimize;
 
   const container = document.getElementById('stops-container');
-  container.innerHTML = ''; // Clear map
+  container.innerHTML = ''; 
   
   if (data.stops && data.stops.length > 0) {
     data.stops.forEach(s => {
-      const row = addStopRow(s.val, false); // false = don't trigger autosave during load
+      const row = addStopRow(s.val, false);
       const input = row.querySelector('.location-input');
       const notes = row.querySelector('.notes-input');
       
@@ -1308,19 +1179,19 @@ function applyRouteState(data) {
         input.classList.add('geocoded');
         row.querySelector('.geocode-indicator').classList.add('visible');
       }
-      
       if (s.customLabel) input.dataset.customLabel = s.customLabel;
       if (s.labelSize) input.dataset.labelSize = s.labelSize;
       if (s.labelColor) input.dataset.labelColor = s.labelColor;
       if (s.labelWeight) input.dataset.labelWeight = s.labelWeight;
       if (s.notes) notes.value = s.notes;
+      if (s.visited) {
+        row.querySelector('.visited-checkbox').checked = true;
+        row.classList.add('row-visited');
+      }
     });
-  } else {
-    addStopRow('', false); addStopRow('', false);
-  }
+  } else { addStopRow('', false); addStopRow('', false); }
 }
 
-// 4. Overridden JSON Export
 function saveRouteToFile() {
   const state = serializeRouteState();
   const name = state.name || 'Route';
@@ -1331,48 +1202,113 @@ function saveRouteToFile() {
   a.href = url; a.download = `${name}_${day}.json`.replace(/\s+/g, '_'); a.click();
 }
 
-// 5. Overridden JSON Import
 function loadRouteFromFile(event) {
   const file = event.target.files[0];
   if (!file) return;
   const reader = new FileReader();
   reader.onload = function(e) {
-    try {
-      applyRouteState(JSON.parse(e.target.result));
-      autoSave();
-    } catch(err) { alert("Invalid Route JSON file!"); }
+    try { applyRouteState(JSON.parse(e.target.result)); autoSave(); } 
+    catch(err) { alert("Invalid Route JSON file!"); }
   };
   reader.readAsText(file);
 }
 
-
-// Bind header inputs to AutoSave
 document.getElementById('trip-name').addEventListener('input', autoSave);
 document.getElementById('trip-day').addEventListener('input', autoSave);
 document.getElementById('optimize-toggle').addEventListener('change', autoSave);
 
-// Also add autoSave() to the end of processBulkImport() and inside attachDragHandlers() touchend/dragend events
-
 window.addEventListener('DOMContentLoaded', () => { 
   initMap(); 
-  
   const savedState = localStorage.getItem('dennav_offline_state');
   if (savedState) {
     try {
       applyRouteState(JSON.parse(savedState));
-      // Auto-generate if they already have valid locations!
       const readyStops = document.querySelectorAll('.location-input.geocoded').length;
-      if (readyStops > 1) {
-        setTimeout(generateRoute, 500);
-      }
-    } catch(e) {
-      addStopRow(); addStopRow(); 
-    }
-  } else {
-    // Fresh start
-    addStopRow(); addStopRow(); 
-  }
+      if (readyStops > 1) setTimeout(generateRoute, 500);
+    } catch(e) { addStopRow(); addStopRow(); }
+  } else { addStopRow(); addStopRow(); }
 });
+
+function toggleSidebar() {
+  const sidebar = document.getElementById('sidebar-wrapper');
+  const toggleText = document.getElementById('toggle-text');
+  isMapFullscreen = !isMapFullscreen;
+  if (isMapFullscreen) {
+    sidebar.classList.add('collapsed');
+    toggleText.textContent = "Show List";
+    setTimeout(() => map.invalidateSize(), 350);
+  } else {
+    sidebar.classList.remove('collapsed');
+    toggleText.textContent = "Show Map";
+  }
+}
+
+function toggleVisited(checkbox) {
+  const row = checkbox.closest('.stop-row');
+  if (checkbox.checked) row.classList.add('row-visited');
+  else row.classList.remove('row-visited');
+  
+  autoSave();
+  updateProgressUI();
+  
+  // Surgically update the UI without triggering the API
+  if (currentRoute) {
+    const rows = Array.from(document.querySelectorAll('.stop-row'));
+    const index = rows.indexOf(row);
+    
+    // Update Itinerary Checkmark
+    const itinStops = document.querySelectorAll('.itin-stop');
+    if (itinStops[index]) {
+      const nameDiv = itinStops[index].querySelector('.stop-name');
+      const inputVal = row.querySelector('.location-input').value || 'Unknown';
+      nameDiv.innerHTML = checkbox.checked ? `<span style="color:#166534;">✓</span> ${escapeHtml(inputVal)}` : escapeHtml(inputVal);
+    }
+    
+    // Update Map Label Checkmark
+    const labelMk = markers[index * 2 + 1]; 
+    if (labelMk) {
+      const el = labelMk.getElement().querySelector('.map-print-label');
+      const inputRef = row.querySelector('.location-input');
+      
+      if (el && !inputRef.dataset.customLabel) { // Only change it if the user hasn't typed a custom label
+         let checkPrefix = checkbox.checked ? `<span style="color:#166534; font-size:14px;">✓</span> ` : '';
+         let inputVal = inputRef.value;
+         let shortName = inputVal.split(',')[0].trim();
+         if (shortName.length <= 6 && inputVal.split(',').length > 1) shortName += ', ' + inputVal.split(',')[1].trim();
+         if (shortName.length > 24) shortName = shortName.substring(0, 24) + '...';
+         
+         el.innerHTML = `${checkPrefix}<b>${index+1}.</b> ${escapeHtml(shortName)}`;
+         el.style.color = checkbox.checked ? '#166534' : (inputRef.dataset.labelColor || '#0f172a');
+      }
+    }
+  }
+}
+
+function updateProgressUI() {
+  const checkboxes = document.querySelectorAll('.visited-checkbox');
+  let visitedCount = 0; let validStops = 0;
+  
+  checkboxes.forEach(cb => {
+    const input = cb.closest('.stop-row').querySelector('.location-input');
+    if (input.value.trim() !== '') {
+      validStops++;
+      if (cb.checked) visitedCount++;
+    }
+  });
+  
+  const progWrapper = document.getElementById('progress-wrapper');
+  if (validStops > 0 && currentRoute) {
+    progWrapper.style.display = 'block';
+    const pct = Math.round((visitedCount / validStops) * 100);
+    document.getElementById('prog-text').textContent = `${visitedCount} / ${validStops} (${pct}%)`;
+    const fill = document.getElementById('prog-fill');
+    fill.style.width = `${pct}%`;
+    fill.style.background = pct === 100 ? 'var(--forest-main)' : 'var(--color-start)';
+  } else {
+    progWrapper.style.display = 'none';
+  }
+}
+
 </script>
 </body>
 </html>
