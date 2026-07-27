@@ -324,6 +324,33 @@
 
     .drag-handle { touch-action: none; }
 
+.stop-content { flex: 1; display: flex; flex-direction: column; gap: 4px; overflow: hidden; }
+.notes-input {
+  width: 100%;
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 11px;
+  font-family: var(--font-main);
+  color: var(--text-dark);
+  transition: 0.2s;
+  outline: none;
+  resize: vertical;
+  min-height: 32px;
+}
+.notes-input:focus { border-color: var(--forest-main); background: #fff; }
+.itin-note {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #475569;
+  background: #f1f5f9;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border-left: 3px solid var(--forest-main);
+  line-height: 1.4;
+}
+
   </style>
 </head>
 <body>
@@ -490,11 +517,13 @@ let isPicking = false;
 let pickingInput = null;
 
 let currentEditingLabel = null;
+let currentEditingInputRef = null;
 
-function openEditModal(el) {
+// Notice the new inputRef parameter
+function openEditModal(el, inputRef) {
   currentEditingLabel = el;
+  currentEditingInputRef = inputRef; 
   
-  // Populate current values
   document.getElementById('modal-label-text').value = el.innerHTML;
   
   const computed = window.getComputedStyle(el);
@@ -526,17 +555,27 @@ function sanitizeHTML(html) {
 }
 
 function saveLabelEdit() {
-  if (!currentEditingLabel) return;
+  if (!currentEditingLabel || !currentEditingInputRef) return;
   
-  // Sanitize before injecting to prevent XSS
-  const rawText = document.getElementById('modal-label-text').value;
-  currentEditingLabel.innerHTML = sanitizeHTML(rawText);
+  const cleanText = sanitizeHTML(document.getElementById('modal-label-text').value);
+  const size = document.getElementById('modal-label-size').value;
+  const color = document.getElementById('modal-label-color').value;
+  const weight = document.getElementById('modal-label-weight').value;
+
+  // 1. Update the map visually
+  currentEditingLabel.innerHTML = cleanText;
+  currentEditingLabel.style.fontSize = size + 'px';
+  currentEditingLabel.style.color = color;
+  currentEditingLabel.style.fontWeight = weight;
   
-  currentEditingLabel.style.fontSize = document.getElementById('modal-label-size').value + 'px';
-  currentEditingLabel.style.color = document.getElementById('modal-label-color').value;
-  currentEditingLabel.style.fontWeight = document.getElementById('modal-label-weight').value;
+  // 2. Save it back to the sidebar's data attributes for offline persistence
+  currentEditingInputRef.dataset.customLabel = cleanText;
+  currentEditingInputRef.dataset.labelSize = size;
+  currentEditingInputRef.dataset.labelColor = color;
+  currentEditingInputRef.dataset.labelWeight = weight;
   
   closeEditModal();
+  autoSave(); // Trigger local storage save
 }
 
 function closeEditModal() {
@@ -708,20 +747,23 @@ function updateRowBadges() {
   });
 }
 
-function addStopRow(prefillValue = '') {
+function addStopRow(prefillValue = '', triggerSave = true) {
   const container = document.getElementById('stops-container');
   const row = document.createElement('div'); 
   row.className = 'stop-row'; 
-  row.draggable = true; /* Enables Drag & Drop */
+  row.draggable = true; 
   row.innerHTML = `
     <div class="drag-handle" title="Drag to reorder">⠿</div>
     <div class="stop-badge"></div>
-    <div class="stop-input-wrap">
-      <input type="text" class="location-input" placeholder="Search, paste Lat,Lon, or Pick" value="${escapeHtml(prefillValue)}" />
-      <span class="geocode-indicator">✓</span>
-      <button class="pick-btn" onclick="toggleMapPick(this)" title="Pick location from map">
-        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="22" y1="12" x2="18" y2="12"></line><line x1="6" y1="12" x2="2" y2="12"></line><line x1="12" y1="6" x2="12" y2="2"></line><line x1="12" y1="22" x2="12" y2="18"></line></svg>
-      </button>
+    <div class="stop-content">
+      <div class="stop-input-wrap">
+        <input type="text" class="location-input" placeholder="Search, paste Lat,Lon, or Pick" value="${escapeHtml(prefillValue)}" />
+        <span class="geocode-indicator">✓</span>
+        <button class="pick-btn" onclick="toggleMapPick(this)" title="Pick location from map">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="22" y1="12" x2="18" y2="12"></line><line x1="6" y1="12" x2="2" y2="12"></line><line x1="12" y1="6" x2="12" y2="2"></line><line x1="12" y1="22" x2="12" y2="18"></line></svg>
+        </button>
+      </div>
+      <textarea class="notes-input" placeholder="Notes (e.g. Audit checks, contacts)" oninput="autoSave()"></textarea>
     </div>
     <button class="remove-btn" onclick="removeStopRow(this)">✕</button>
   `;
@@ -729,14 +771,22 @@ function addStopRow(prefillValue = '') {
   updateRowBadges();
   
   const input = row.querySelector('.location-input');
+  
+  // Hook autocomplete to trigger autoSave
+  input.addEventListener('input', autoSave);
+  
   attachInputHandlers(input);
   attachDragHandlers(row);
   if (prefillValue) checkCoordinateBypass(input, prefillValue);
+  
+  if (triggerSave) autoSave();
+  return row;
 }
 
 function removeStopRow(btn) {
   btn.closest('.stop-row').remove();
   updateRowBadges();
+  autoSave();
 }
 
 function attachInputHandlers(input) {
@@ -851,12 +901,14 @@ async function generateRoute() {
          const rgName = await reverseGeocode(inp.dataset.lat, inp.dataset.lon);
          if (rgName) nameVal = rgName; 
       }
-      points.push({ name: nameVal, lat: parseFloat(inp.dataset.lat), lon: parseFloat(inp.dataset.lon) });
-    } else {
-      document.getElementById('loading-text').textContent = `Geocoding location ${i+1} of ${inputs.length}...`;
-      await sleep(1100); // STRICT 1.1s API Throttle
-      const geo = await fallbackGeocode(nameVal);
-      if (geo) points.push({ name: nameVal, lat: geo.lat, lon: geo.lon });
+      // Find where you push to points[] and modify it like this:
+      points.push({ 
+        name: nameVal, 
+        lat: parseFloat(inp.dataset.lat), 
+        lon: parseFloat(inp.dataset.lon),
+        inputRef: inp, // <-- NEW
+        notes: inp.closest('.stop-row').querySelector('.notes-input').value // <-- NEW
+      });
     }
   }
 
@@ -951,49 +1003,38 @@ async function generateRoute() {
     // We NO LONGER bind the label directly to the circle.
     markers.push(mk); 
 
-     const labelIcon = L.divIcon({
+     let labelText = pt.inputRef.dataset.customLabel || `<b>${i+1}.</b> ${escapeHtml(shortName)}`;
+    let lSize = pt.inputRef.dataset.labelSize || 11;
+    let lColor = pt.inputRef.dataset.labelColor || '#0f172a';
+    let lWeight = pt.inputRef.dataset.labelWeight || '800';
+
+    const labelIcon = L.divIcon({
       className: 'custom-draggable-label-wrapper',
-      // Removed contenteditable="true", added a basic inline style string
-      html: `<div class="map-print-label" title="Drag to move. Drag bottom-right corner to resize. Click to edit." style="color: #0f172a; font-size: 11px;"><b>${i+1}.</b> ${escapeHtml(shortName)}</div>`,
+      html: `<div class="map-print-label" title="Drag to move/resize. Click to edit." style="color: ${lColor}; font-size: ${lSize}px; font-weight: ${lWeight};">${labelText}</div>`,
       iconSize: null,
       iconAnchor: [-15, 20] 
     });
 
-    const labelMk = L.marker([pt.lat, pt.lon], { 
-      icon: labelIcon, 
-      draggable: true, 
-      zIndexOffset: 1000 
-    }).addTo(map);
+    const labelMk = L.marker([pt.lat, pt.lon], { icon: labelIcon, draggable: true, zIndexOffset: 1000 }).addTo(map);
 
     labelMk.on('add', function() {
        const el = this.getElement().querySelector('.map-print-label');
        L.DomEvent.disableClickPropagation(el); 
-       
-       // FIX: Prevent map & marker dragging while resizing CSS box
        el.addEventListener('mousedown', function(e) {
-         // Detect if mouse is in the bottom-right 20x20px corner (the resize handle)
-         const isResizing = (e.offsetX > el.offsetWidth - 20) && (e.offsetY > el.offsetHeight - 20);
-         
-         if (isResizing) {
-           labelMk.dragging.disable(); // Stop marker from moving
-           map.dragging.disable();     // Stop map from panning
-           
-           const stopResize = () => {
-             labelMk.dragging.enable();
-             map.dragging.enable();
-             document.removeEventListener('mouseup', stopResize);
-           };
+         if ((e.offsetX > el.offsetWidth - 20) && (e.offsetY > el.offsetHeight - 20)) {
+           labelMk.dragging.disable(); map.dragging.disable();
+           const stopResize = () => { labelMk.dragging.enable(); map.dragging.enable(); document.removeEventListener('mouseup', stopResize); autoSave(); };
            document.addEventListener('mouseup', stopResize);
          }
        });
     });
 
-    // NEW: Open modal on click
+    // Pass pt.inputRef to link the map back to the UI!
     labelMk.on('click', function() {
       const el = this.getElement().querySelector('.map-print-label');
-      openEditModal(el);
+      openEditModal(el, pt.inputRef);
     });
-
+    
     markers.push(labelMk);
   });
   
@@ -1035,6 +1076,8 @@ async function generateRoute() {
     }
 
     const div = document.createElement('div'); div.className = 'itin-stop';
+
+    let noteHtml = stop.notes ? `<div class="itin-note">${escapeHtml(stop.notes)}</div>` : '';
     
     div.innerHTML = `
       <div class="itin-badge" style="background: ${badgeColor}; border-color: ${badgeColor};">${i+1}</div>
@@ -1044,6 +1087,7 @@ async function generateRoute() {
            <div class="stop-leg">${travelText}</div>
         </div>
         <div class="stop-meta">${stop.lat.toFixed(5)}, ${stop.lon.toFixed(5)}</div>
+        ${noteHtml}
         <div class="qr-wrapper">
            <div class="qr-box">
              <div style="display:flex; flex-direction:column; align-items:center; text-align:center;">
@@ -1142,9 +1186,9 @@ document.addEventListener('keydown', function(e) {
 
 // ── Soft Memory Reset ──
 function resetAll() {
-  if (confirm("🚨 Are you sure you want to clear this entire route? Any unsaved progress will be lost.")) {
-    sessionStorage.setItem('trip-name', document.getElementById('trip-name').value);
-    sessionStorage.setItem('trip-day', document.getElementById('trip-day').value);
+  if (confirm("🚨 Are you sure you want to clear this entire route? All offline data and notes will be deleted.")) {
+    localStorage.removeItem('dennav_offline_state');
+    sessionStorage.clear();
     location.reload(); 
   }
 }
@@ -1208,56 +1252,126 @@ function getDragAfterElement(container, y) {
   }, { offset: Number.NEGATIVE_INFINITY }).element;
 }
 
-// ── Save/Load JSON Logic ──
+let autoSaveTimeout = null;
+
+// 1. Trigger this whenever anything changes
+function autoSave() {
+  clearTimeout(autoSaveTimeout);
+  autoSaveTimeout = setTimeout(() => {
+    localStorage.setItem('dennav_offline_state', JSON.stringify(serializeRouteState()));
+  }, 1000); // 1-second debounce
+}
+
+// 2. Gather all data from the UI & Datasets
+function serializeRouteState() {
+  const stops = Array.from(document.querySelectorAll('.stop-row')).map(row => {
+    const input = row.querySelector('.location-input');
+    const notes = row.querySelector('.notes-input');
+    return {
+      val: input.value,
+      lat: input.dataset.lat || '',
+      lon: input.dataset.lon || '',
+      geocoded: input.classList.contains('geocoded'),
+      customLabel: input.dataset.customLabel || '',
+      labelSize: input.dataset.labelSize || '',
+      labelColor: input.dataset.labelColor || '',
+      labelWeight: input.dataset.labelWeight || '',
+      notes: notes.value
+    };
+  });
+  return {
+    name: document.getElementById('trip-name').value,
+    day: document.getElementById('trip-day').value,
+    optimize: document.getElementById('optimize-toggle').checked,
+    stops: stops
+  };
+}
+
+// 3. Inject data back into the UI (Used by LocalStorage and JSON Import)
+function applyRouteState(data) {
+  if (!data) return;
+  if (data.name !== undefined) document.getElementById('trip-name').value = data.name;
+  if (data.day !== undefined) document.getElementById('trip-day').value = data.day;
+  if (data.optimize !== undefined) document.getElementById('optimize-toggle').checked = data.optimize;
+
+  const container = document.getElementById('stops-container');
+  container.innerHTML = ''; // Clear map
+  
+  if (data.stops && data.stops.length > 0) {
+    data.stops.forEach(s => {
+      const row = addStopRow(s.val, false); // false = don't trigger autosave during load
+      const input = row.querySelector('.location-input');
+      const notes = row.querySelector('.notes-input');
+      
+      if (s.geocoded && s.lat && s.lon) {
+        input.dataset.lat = s.lat; input.dataset.lon = s.lon;
+        input.classList.add('geocoded');
+        row.querySelector('.geocode-indicator').classList.add('visible');
+      }
+      
+      if (s.customLabel) input.dataset.customLabel = s.customLabel;
+      if (s.labelSize) input.dataset.labelSize = s.labelSize;
+      if (s.labelColor) input.dataset.labelColor = s.labelColor;
+      if (s.labelWeight) input.dataset.labelWeight = s.labelWeight;
+      if (s.notes) notes.value = s.notes;
+    });
+  } else {
+    addStopRow('', false); addStopRow('', false);
+  }
+}
+
+// 4. Overridden JSON Export
 function saveRouteToFile() {
-  const name = document.getElementById('trip-name').value || 'Route';
-  const day = document.getElementById('trip-day').value;
-  const stops = Array.from(document.querySelectorAll('.location-input')).map(input => ({
-    val: input.value, lat: input.dataset.lat, lon: input.dataset.lon, geocoded: input.classList.contains('geocoded')
-  }));
-  const data = { name, day, stops };
-  const blob = new Blob([JSON.stringify(data)], { type: "application/json" });
+  const state = serializeRouteState();
+  const name = state.name || 'Route';
+  const day = state.day || '';
+  const blob = new Blob([JSON.stringify(state)], { type: "application/json" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url; a.download = `${name}_${day}.json`.replace(/\s+/g, '_'); a.click();
 }
 
+// 5. Overridden JSON Import
 function loadRouteFromFile(event) {
   const file = event.target.files[0];
   if (!file) return;
   const reader = new FileReader();
   reader.onload = function(e) {
     try {
-      const data = JSON.parse(e.target.result);
-      document.getElementById('trip-name').value = data.name || '';
-      document.getElementById('trip-day').value = data.day || '';
-      document.getElementById('stops-container').innerHTML = ''; // Clear map
-      data.stops.forEach(s => {
-        addStopRow(s.val);
-        const inputs = document.querySelectorAll('.location-input');
-        const lastInput = inputs[inputs.length - 1];
-        if (s.geocoded && s.lat && s.lon) {
-          lastInput.dataset.lat = s.lat; lastInput.dataset.lon = s.lon;
-          lastInput.classList.add('geocoded');
-          lastInput.closest('.stop-input-wrap').querySelector('.geocode-indicator').classList.add('visible');
-        }
-      });
+      applyRouteState(JSON.parse(e.target.result));
+      autoSave();
     } catch(err) { alert("Invalid Route JSON file!"); }
   };
   reader.readAsText(file);
 }
 
-// ── On Load: Restore Memory ──
-window.addEventListener('DOMContentLoaded', () => { 
-  const savedName = sessionStorage.getItem('trip-name');
-  const savedDay = sessionStorage.getItem('trip-day');
-  
-  if (savedName !== null) document.getElementById('trip-name').value = savedName;
-  if (savedDay !== null) document.getElementById('trip-day').value = savedDay;
 
+// Bind header inputs to AutoSave
+document.getElementById('trip-name').addEventListener('input', autoSave);
+document.getElementById('trip-day').addEventListener('input', autoSave);
+document.getElementById('optimize-toggle').addEventListener('change', autoSave);
+
+// Also add autoSave() to the end of processBulkImport() and inside attachDragHandlers() touchend/dragend events
+
+window.addEventListener('DOMContentLoaded', () => { 
   initMap(); 
-  addStopRow(); 
-  addStopRow(); 
+  
+  const savedState = localStorage.getItem('dennav_offline_state');
+  if (savedState) {
+    try {
+      applyRouteState(JSON.parse(savedState));
+      // Auto-generate if they already have valid locations!
+      const readyStops = document.querySelectorAll('.location-input.geocoded').length;
+      if (readyStops > 1) {
+        setTimeout(generateRoute, 500);
+      }
+    } catch(e) {
+      addStopRow(); addStopRow(); 
+    }
+  } else {
+    // Fresh start
+    addStopRow(); addStopRow(); 
+  }
 });
 </script>
 </body>
